@@ -1,0 +1,37 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data  # Persist Elasticsearch data
+    networks:
+      - unbound-network
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.9
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - kibana_config:/usr/share/kibana/config
+    networks:
+      - unbound-network
+    restart: unless-stopped
+
+networks:
+  unbound-network:
+    driver: bridge
+
+volumes:
+  es_data:
+    driver: local
+  kibana_config:
+    driver: local
