@@ -1,7 +1,7 @@
 from datetime import datetime
 from elasticsearch import Elasticsearch
 
-ES_HOST = "http://localhost:9200"
+ES_HOST = "http://elasticsearch:9200/"
 es = Elasticsearch([ES_HOST])
 
 def full_log_request(response_data):

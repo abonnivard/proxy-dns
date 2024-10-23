@@ -5,7 +5,7 @@ from module.ipv4 import log_ipv4_request
 from module.ipv6 import log_ipv6_request
 from logger import log_request
 
-LISTEN_HOST = '127.0.0.1'
+LISTEN_HOST = '0.0.0.0'
 LISTEN_PORT = 53
 DNS_SERVER = '8.8.8.8'  # Google DNS
 DNS_PORT = 53
@@ -35,9 +35,8 @@ def handle_dns_request(data, addr):
         # Decode and get the response details
         response_data = decode_dns_response(response, question_end_index, query_data)
 
-        print(response_data)
+        # Log the request
         log_request(response_data)
-
 
         # Send the response back to the original client
         sock.sendto(response, addr)
