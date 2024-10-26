@@ -1,7 +1,3 @@
-Here's a revised and organized version of your `README.md`:
-
----
-
 # DNS Proxy with Elasticsearch & Kibana
 
 This project is a DNS Proxy that captures and logs DNS queries. The data is stored in Elasticsearch and visualized using Kibana. The proxy is containerized with Docker, making deployment simple and efficient.
