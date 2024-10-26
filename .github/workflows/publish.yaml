@@ -1,0 +1,32 @@
+name: publish
+
+on: [push]
+
+jobs:
+  publish-docker-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.TOKEN }} | docker login ghcr.io -u abonnivard --password-stdin
+
+      # Installer QEMU pour supporter les builds multi-architecture
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64, amd64
+
+      # Configurer Buildx pour supporter les builds multi-architecture
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build et push de l'image Docker multi-architecture
+      - name: Build and Push unbound image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          platforms: linux/arm64, linux/amd64
+          push: true
+          tags: ghcr.io/abonnivard/proxy-dns:latest
