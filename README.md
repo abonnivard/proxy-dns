@@ -39,7 +39,7 @@ Just use the following docker-compose file:
 ```yaml
 services:
   dns-proxy:
-    build: .
+    image : ghcr.io/abonnivard/proxy-dns:latest
     container_name: dns_proxy
     ports:
       - "53:53/udp"
