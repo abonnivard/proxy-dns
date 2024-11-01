@@ -1,8 +1,6 @@
 import socket
 import threading
 from decoder import decode_dns_query, decode_dns_response
-from module.ipv4 import log_ipv4_request
-from module.ipv6 import log_ipv6_request
 from logger import log_request
 
 LISTEN_HOST = '0.0.0.0'
@@ -36,7 +34,10 @@ def handle_dns_request(data, addr):
         response_data = decode_dns_response(response, question_end_index, query_data)
 
         # Log the request
-        log_request(response_data)
+        try:
+            log_request(response_data)
+        except:
+            pass
 
         # Send the response back to the original client
         sock.sendto(response, addr)

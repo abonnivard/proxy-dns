@@ -1,0 +1,8 @@
+services:
+  dns-proxy:
+    build: . #or image: ghcr.io/abonnivard/proxy-dns:latest
+    container_name: dns_proxy
+    ports:
+      - "53:53/udp"
+    cap_add:
+      - NET_ADMIN

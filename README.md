@@ -136,6 +136,24 @@ dig @127.0.0.1 -p <your-port> google.com
 
 ## Troubleshooting
 
+
+### To run only the DNS proxy
+
+```bash
+docker-compose -f docker-compose-proxy.yaml up -d   
+```
+
+```yaml
+services:
+  dns-proxy:
+    build: . #or image: ghcr.io/abonnivard/proxy-dns:latest
+    container_name: dns_proxy
+    ports:
+      - "53:53/udp"
+    cap_add:
+      - NET_ADMIN
+```
+
 ### DNS Proxy Not Reachable from Host
 
 1. Ensure that the DNS Proxy container is configured to bind to `0.0.0.0`.
