@@ -21,10 +21,14 @@ Les objectifs de ce projet sont les suivants :
 
 Voici les étapes accomplies jusqu’à présent ainsi que les tâches à venir :
 
-- **Configuration initiale du proxy DNS** : Implémentation d'un serveur proxy DNS en python capable de décoder les requêtes et réponses DNS, et de transmettre les requêtes aux résolveurs publics.
+- **Compréhension du fonctionnement des requêtes DNS** :  Utilisation des commandes `dig ...`, du résolveur DNS `unbound` et de `Wireshark` afin de saisir les différents types de requêtes possibles (A, AAAA, MX, etc.), les étapes traversées lors d'une requête ainsi que les messages échangés. Référence à la **RFC 1035** ("Domain Names - Implementation and Specification") pour mieux appréhender la structure des requêtes et réponses DNS.
+- **Configuration initiale du proxy DNS** : 
+  - Implémentation d'un serveur proxy DNS en python capable de décoder les requêtes et réponses DNS, et de transmettre les requêtes aux résolveurs publics. Afin de collecter des statistiques tout en respectant la vie privée, nous avons pour l'instant décidé d'enregistrer uniquement le nombre de requêtes DNS par jour, en fonction de leur type (A, AAAA, MX, etc.).
+- Utilisation des outils `Elasticsearch` et `Kibana` dans des conteneurs pour stocker et visualiser les statistiques.
 - **Développement d’un système de détection de modèles DNS suspects** :
   - Création de scripts pour identifier des motifs de requêtes inhabituels, par exemple un grand nombre de sous-domaines aléatoires sous un même suffixe public (e.g., `truc-aléatoire.domaine.com`).
   - Compteur pour le nombre de valeurs uniques de sous-domaines observés pour chaque suffixe public (par exemple, `x.domaine.com` pour `domaine.com`).
+  - Test et conpréhension de notre script en créant un tunnel DNS à traver l'outil `iodine`.
 - **Optimisation pour la confidentialité** : Implémentation d’une logique de journalisation conditionnelle, où les requêtes ne sont journalisées que lorsqu’un comportement suspect est identifié.
   
 **Prochaines tâches** :
