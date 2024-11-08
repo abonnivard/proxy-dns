@@ -34,7 +34,7 @@ Voici les étapes accomplies jusqu’à présent ainsi que les tâches à venir 
 **Prochaines tâches** :
 - **Mise en place d’un environnement de test** :
    - Installation du proxy DNS sur une machine virtuelle pour simuler un environnement réaliste et permettre des tests en conditions réelles.
-   - Recrutement de plusieurs testeurs (points de terminaison, serveurs) pour recueillir des statistiques authentiques et affiner les détections tout en garantissant la confidentialité des utilisateurs.
+   - Recrutement de plusieurs testeurs (endpoints, serveurs) pour recueillir des statistiques authentiques et affiner les détections tout en garantissant la confidentialité des utilisateurs.
 - **Affinement de la détection des comportements malveillants** :
   - Ajouter des règles de détection pour les tunnels DNS en capturant les schémas de requêtes potentiellement malveillants et éviter les faux positifs.
   - Réaliser des tests pour vérifier que les détections ne sont pas déclenchées par des fournisseurs légitimes de sous-domaines dynamiques.
