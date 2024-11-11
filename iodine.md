@@ -48,7 +48,7 @@ Pour configurer un serveur iodine, vous devez posséder un domaine que vous cont
 Exécutez le serveur en utilisant la commande suivante, en spécifiant le domaine que vous avez configuré et l’interface réseau :
 
 ```bash
-sudo iodined -f 10.0.0.1 example.com
+sudo iodined -c -f 10.0.0.1 -P test tunnel.bonnivard.net
 ```
 
 Cela lance le serveur en utilisant `example.com` comme domaine pour le tunnel et attribue l'adresse IP 10.0.0.1 au serveur dans le tunnel.
@@ -66,7 +66,7 @@ sudo apt install iodine -y
 Sur le client, lancez la commande suivante pour établir le tunnel DNS :
 
 ```bash
-sudo iodine -f 10.0.0.1 example.com
+sudo iodine -I 50 -f -P test  tunnel.bonnivard.net
 ```
 
 Iodine utilisera `example.com` pour envoyer des requêtes DNS vers le serveur. 
