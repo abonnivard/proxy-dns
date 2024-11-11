@@ -31,6 +31,7 @@ jobs:
           push: true
           tags: ghcr.io/abonnivard/proxy-dns:latest
 
+
       # Deploy to remote server
       - name: Deploy to Server
         uses: appleboy/ssh-action@v0.1.3
