@@ -38,6 +38,7 @@ def query_type_to_string(qtype):
         47: "NSEC",  # Next Secure
         48: "DNSKEY",  # DNS Key Record
         257: "CAA",  # Certification Authority Authorization
+        65: "HTTPS",  # HTTPS specific record
     }
 
     return query_type_map.get(qtype, f"Unknown query type: {qtype}")
@@ -81,18 +82,18 @@ def decode_dns_query(data):
     return transaction_id, index, data
 
 
+# Décode une réponse DNS et retourne un dictionnaire structuré
 def decode_dns_response(data, index, query_data):
-    """Decodes DNS response and returns a structured dictionary."""
-
-    header = struct.unpack('!6H', data[:12])  # First 12 bytes of the header
-    an_count = header[3]  # Number of answer records
+    """Décode la réponse DNS et retourne un dictionnaire structuré."""
+    header = struct.unpack('!6H', data[:12])  # 12 premiers octets de l'en-tête
+    an_count = header[3]  # Nombre d'enregistrements de réponse
     return_list = {
         "answer": an_count,
-        "records": []  # Liste qui contiendra tous les enregistrements
+        "records": []  # Liste contenant tous les enregistrements
     }
 
     for _ in range(an_count):
-        # Name pointer (2 bytes, compressed format)
+        # Pointeur de nom (2 octets, format compressé)
         name_pointer = struct.unpack('!H', data[index:index + 2])[0]
         index += 2
 
@@ -108,23 +109,23 @@ def decode_dns_response(data, index, query_data):
             "class": rclass,
             "type": query_type_to_string(rtype),
             "ttl": ttl,
-            "data": None  # Ce sera rempli selon le type de l'enregistrement
+            "data": None  # Ce sera rempli selon le type d'enregistrement
         }
 
-        # Handle different record types
-        if rtype == 1:  # A record (IPv4)
+        # Gestion des différents types d'enregistrements
+        if rtype == 1:  # Enregistrement A (IPv4)
             record['data'] = socket.inet_ntoa(data[index:index + 4])
             index += 4
-        elif rtype == 28:  # AAAA record (IPv6)
+        elif rtype == 28:  # Enregistrement AAAA (IPv6)
             record['data'] = socket.inet_ntop(socket.AF_INET6, data[index:index + 16])
             index += 16
-        elif rtype == 15:  # MX record
+        elif rtype == 15:  # Enregistrement MX
             preference = struct.unpack('!H', data[index:index + 2])[0]
             index += 2
             exchange = decode_domain_name(data, index)
-            record['data'] = f"Preference={preference}, Exchange={exchange}"
+            record['data'] = f"Préférence={preference}, Échange={exchange}"
             index += rdlength - 2
-        elif rtype == 6:  # SOA record
+        elif rtype == 6:  # Enregistrement SOA
             mname = decode_domain_name(data, index)
             index += len(mname) + 1
             rname = decode_domain_name(data, index)
@@ -132,14 +133,53 @@ def decode_dns_response(data, index, query_data):
             serial, refresh, retry, expire, minimum = struct.unpack('!IIIII', data[index:index + 20])
             record['data'] = f"MNAME={mname}, RNAME={rname}, SERIAL={serial}, REFRESH={refresh}, RETRY={retry}, EXPIRE={expire}, MINIMUM={minimum}"
             index += 20
+        elif rtype == 2:  # Enregistrement NS (Serveur de noms)
+            nameserver = decode_domain_name(data, index)
+            record['data'] = nameserver
+            index += rdlength
+        elif rtype == 5:  # Enregistrement CNAME (Nom canonique)
+            cname = decode_domain_name(data, index)
+            record['data'] = cname
+            index += rdlength
+        elif rtype == 12:  # Enregistrement PTR (Pointeur)
+            ptr = decode_domain_name(data, index)
+            record['data'] = ptr
+            index += rdlength
+        elif rtype == 33:  # Enregistrement SRV (Localisateur de service)
+            priority, weight, port = struct.unpack('!HHH', data[index:index + 6])
+            index += 6
+            target = decode_domain_name(data, index)
+            record['data'] = f"Priority={priority}, Weight={weight}, Port={port}, Target={target}"
+            index += rdlength - 6
+        elif rtype == 65:  # Enregistrement HTTPS spécifique
+            try:
+                # Vérifier la longueur de l'enregistrement pour éviter l'index out of range
+                if rdlength < 6:
+                    raise ValueError(f"Enregistrement HTTPS trop court : rdlength={rdlength}")
+
+                # L'enregistrement HTTPS peut contenir une série de données dans un format particulier
+                priority, weight, port = struct.unpack('!HHH', data[index:index + 6])
+                index += 6
+                if rdlength > 6:
+                    target = decode_domain_name(data, index)
+                    record['data'] = f"Priority={priority}, Weight={weight}, Port={port}, Target={target}"
+                    index += rdlength - 6
+                else:
+                    record['data'] = f"Priority={priority}, Weight={weight}, Port={port}, Target=None"
+            except Exception as e:
+                record['data'] = f"Erreur de traitement de l'enregistrement HTTPS : {e}"
+                index += rdlength
         else:
-            record['data'] = "Unsupported Record Type"
+            # Gestion des enregistrements inconnus
+            record['data'] = f"Type inconnu (Code {rtype}) - Données brutes: {data[index:index + rdlength]}"
             index += rdlength
 
-        # Ajouter l'enregistrement à la liste
+            # Ajouter l'enregistrement à la liste
         return_list["records"].append(record)
 
     return return_list
+
+
 
 def decode_domain_name(data, index):
     """Helper function to decode compressed domain names in DNS responses."""
