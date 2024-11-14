@@ -28,7 +28,7 @@ def handle_dns_request(data, addr):
     """Handles the DNS request, forwards it, decodes it, logs it, and sends back the response."""
     try:
         # Decode the query
-        transaction_id, question_end_index, query_data = decode_dns_query(data)
+        _transaction_id, question_end_index, query_data = decode_dns_query(data)
         # Forward the request to the real DNS resolver
         response = forward_to_resolver(data)
 

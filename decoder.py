@@ -1,6 +1,3 @@
-import struct
-import socket
-
 """
 Header: 12 bytes
 
@@ -19,6 +16,9 @@ Query Class: 2 bytes (typically 1 for IN, Internet)
 
 This section appears in responses and contains the resolved data.
 """
+
+import struct
+import socket
 
 
 def query_type_to_string(qtype):
@@ -49,11 +49,11 @@ def decode_dns_query(data):
     header = struct.unpack("!6H", data[:12])  # Les 12 bits du header
     # On extrait une par une les informations
     transaction_id = header[0]
-    flags = header[1]
+    _flags = header[1]
     qd_count = header[2]  # Nombre de questions
     an_count = header[3]  # Nombre de réponses
-    ns_count = header[4]  # Nombre d'autorités
-    ar_count = header[5]  # Nombre d'additionnels
+    _ns_count = header[4]  # Nombre d'autorités
+    _ar_count = header[5]  # Nombre d'additionnels
 
     index = 12
     qname = []
@@ -198,18 +198,20 @@ def decode_domain_name(data, index):
     labels = []
     while True:
         length = data[index]
+
         if length == 0:
             index += 1
             break
-        elif length & 0xC0 == 0xC0:
+
+        if length & 0xC0 == 0xC0:
             pointer = struct.unpack("!H", data[index : index + 2])[0]
             pointer &= 0x3FFF
             labels.append(decode_domain_name(data, pointer))
             index += 2
             break
-        else:
-            labels.append(data[index + 1 : index + 1 + length].decode("utf-8"))
-            index += length + 1
+
+        labels.append(data[index + 1 : index + 1 + length].decode("utf-8"))
+        index += length + 1
     return ".".join(labels)
 
 

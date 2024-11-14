@@ -14,7 +14,7 @@ def delete_indices_by_pattern(pattern):
         print(f"Error deleting indices: {e}")
 
 
-if __name__ == "__main__":
+def main():
     while True:
         command = input("Enter DELETE_INDEX command or 'exit' to quit: ").strip()
         if command.startswith("DELETE_INDEX"):
@@ -25,3 +25,7 @@ if __name__ == "__main__":
                 print("No pattern provided. Usage: DELETE_INDEX <pattern>")
         elif command == "exit":
             break
+
+
+if __name__ == "__main__":
+    main()
