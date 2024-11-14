@@ -54,3 +54,13 @@ def log_request(response_data):
     # Indexation dans Elasticsearch
     es.index(index="proxy_logs", body=log_data)
     print("Logged full request to Elasticsearch:", log_data)
+
+
+def log_error(error_message, source):
+    log_data = {
+        "timestamp": datetime.utcnow(),
+        "source": source,
+        "error_message": str(error_message),
+    }
+    es.index(index="proxy_errors", body=log_data)
+    print("Logged error to Elasticsearch:", log_data)
