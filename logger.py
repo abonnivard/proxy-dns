@@ -4,22 +4,25 @@ from elasticsearch import Elasticsearch
 ES_HOST = "http://elasticsearch:9200/"
 es = Elasticsearch([ES_HOST])
 
+
 def full_log_request(response_data):
     log_data = {
-        'timestamp': datetime.utcnow(),
-        "answers_count": response_data['answer'],
-        "records": []  # Liste pour contenir les logs détaillés de chaque enregistrement
+        "timestamp": datetime.utcnow(),
+        "answers_count": response_data["answer"],
+        "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
     # Parcourir les enregistrements et les ajouter à log_data
-    for record in response_data['records']:
-        log_data["records"].append({
-            "qname": record['qname'],
-            "class": record['class'],
-            "type": record['type'],
-            "ttl": record['ttl'],
-            "data": record['data']
-        })
+    for record in response_data["records"]:
+        log_data["records"].append(
+            {
+                "qname": record["qname"],
+                "class": record["class"],
+                "type": record["type"],
+                "ttl": record["ttl"],
+                "data": record["data"],
+            }
+        )
 
     # Indexation dans Elasticsearch
     es.index(index="proxy_logs_full", body=log_data)
@@ -33,21 +36,21 @@ def log_request(response_data):
     full_log_request(response_data)
 
     log_data = {
-        'timestamp': datetime.utcnow(),
-        "answers_count": response_data['answer'],
-        "records": []  # Liste pour contenir les logs détaillés de chaque enregistrement
+        "timestamp": datetime.utcnow(),
+        "answers_count": response_data["answer"],
+        "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
     # Parcourir les enregistrements et les ajouter à log_data
-    for record in response_data['records']:
-        log_data["records"].append({
-            "class": record['class'],
-            "type": record['type'],
-            "ttl": record['ttl'],
-        })
+    for record in response_data["records"]:
+        log_data["records"].append(
+            {
+                "class": record["class"],
+                "type": record["type"],
+                "ttl": record["ttl"],
+            }
+        )
 
     # Indexation dans Elasticsearch
     es.index(index="proxy_logs", body=log_data)
     print("Logged full request to Elasticsearch:", log_data)
-
-

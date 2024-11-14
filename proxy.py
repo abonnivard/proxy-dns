@@ -3,9 +3,9 @@ import threading
 from decoder import decode_dns_query, decode_dns_response
 from logger import log_request
 
-LISTEN_HOST = '0.0.0.0'
+LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 53
-DNS_SERVER = '8.8.8.8'  # Google DNS
+DNS_SERVER = "8.8.8.8"  # Google DNS
 DNS_PORT = 53
 
 # UDP socket (datagram method)
@@ -14,6 +14,7 @@ sock.bind((LISTEN_HOST, LISTEN_PORT))
 
 print(f"DNS Proxy listening on {LISTEN_HOST}:{LISTEN_PORT}")
 
+
 def forward_to_resolver(data):
     """Forwards the DNS query to the real DNS resolver."""
     resolver_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -21,6 +22,7 @@ def forward_to_resolver(data):
     response, _ = resolver_socket.recvfrom(512)
     resolver_socket.close()
     return response
+
 
 def handle_dns_request(data, addr):
     """Handles the DNS request, forwards it, decodes it, logs it, and sends back the response."""
