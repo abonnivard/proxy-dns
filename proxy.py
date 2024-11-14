@@ -38,10 +38,10 @@ def handle_dns_request_udp(sock, data, addr):
             sock.sendto(response, addr)
         except Exception as e:
             print(f"Error handling UDP request from {addr}: {e}")
-            log_error(e, source=f"UDP request from {addr}", data=data, query_data=query_data)
+            log_error(e, source=f"UDP request from {addr}", data=str(data), query_data=query_data)
     except Exception as e:
         print(f"Error handling UDP request from {addr}: {e}")
-        log_error(e, source=f"UDP request from {addr}", data=data, query_data="no query data")
+        log_error(e, source=f"UDP request from {addr}", data=str(data), query_data="no query data")
 
 
 def handle_dns_request_tcp(client_socket):
@@ -58,7 +58,7 @@ def handle_dns_request_tcp(client_socket):
             client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
         except Exception as e:
             print(f"Error handling TCP request: {e}")
-            log_error(e, source="TCP request",  data=data, query_data=query_data)
+            log_error(e, source="TCP request",  data=str(data), query_data=query_data)
     except Exception as e:
         print(f"Error handling TCP request: {e}")
         log_error(e, source="TCP request", data="no data", query_data="no query data")
