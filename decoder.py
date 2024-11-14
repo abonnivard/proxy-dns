@@ -86,6 +86,9 @@ def decode_dns_response(data, index, query_data):
     """Décode la réponse DNS et retourne un dictionnaire structuré."""
     header = struct.unpack("!6H", data[:12])  # 12 premiers octets de l'en-tête
     an_count = header[3]  # Nombre d'enregistrements de réponse
+
+    assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
+
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
