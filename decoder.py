@@ -89,6 +89,7 @@ def decode_dns_response(data, index, query_data):
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
+        "query": query_data,  # Les données de la requête
     }
 
     for _ in range(an_count):
