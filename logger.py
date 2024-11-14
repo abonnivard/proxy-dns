@@ -56,11 +56,12 @@ def log_request(response_data):
     print("Logged full request to Elasticsearch:", log_data)
 
 
-def log_error(error_message, source):
+def log_error(error_message, source, data):
     log_data = {
         "timestamp": datetime.utcnow(),
-        "source": source,
+        "type": source,
         "error_message": str(error_message),
+        "data": data,
     }
     es.index(index="proxy_errors", body=log_data)
     print("Logged error to Elasticsearch:", log_data)
