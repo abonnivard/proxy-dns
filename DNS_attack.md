@@ -65,13 +65,13 @@ L’attaque **SigJam** de classe KeyTrap, détaillée dans des études récentes
 
 - [Attaques par amplification DNS - Explications et contre-mesures (Cloudflare)](https://www.cloudflare.com/fr-fr/learning/ddos/dns-amplification-ddos-attack/)
 
--[Attaques par sous domaines aléatoire - Explication](https://www.akamai.com/fr/glossary/what-are-pseudo-random-subdomain-attacks)
+- [Attaques par sous domaines aléatoire - Explication](https://www.akamai.com/fr/glossary/what-are-pseudo-random-subdomain-attacks)
 
 - [Attaques sur la compléxité des resolvers DNS - KeyTrap: Vulnérabilité critique dans l'infrastructure Internet](https://www.athene-center.de/keytrap)
 
--[RFC 8482 - Comment minimiser la réponse d'une requête DNS de type ANY](https://datatracker.ietf.org/doc/html/rfc8482)
+- [RFC 8482 - Comment minimiser la réponse d'une requête DNS de type ANY](https://datatracker.ietf.org/doc/html/rfc8482)
 
--[RFC 4035 - Protocoles pour la validation DNSSEC](https://datatracker.ietf.org/doc/html/rfc4035)
+- [RFC 4035 - Protocoles pour la validation DNSSEC](https://datatracker.ietf.org/doc/html/rfc4035)
 
 
 ---
