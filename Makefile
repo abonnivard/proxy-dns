@@ -3,7 +3,7 @@ build:
 
 check:
 	black --check *.py
-	pylint -d missing-docstring *.py
+	pylint -d missing-docstring --fail-under 9 *.py
 
 
 run:

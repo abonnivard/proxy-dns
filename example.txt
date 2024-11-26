@@ -1,0 +1,10 @@
+Example: www.example.com
+-> 03 77 77 77 07 65 78 61 6D 70 6C 65 03 63 6F 6D 00
+
+03: Length of the first label, www
+77 77 77: The label "www"
+07: Length of the second label, example
+65 78 61 6D 70 6C 65: The label "example"
+03: Length of the third label, com
+63 6F 6D: The label "com"
+00: End of the domain name

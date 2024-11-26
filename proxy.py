@@ -32,16 +32,28 @@ def handle_dns_request_udp(sock, data, addr):
         _transaction_id, question_end_index, query_data = decode_dns_query(data)
         try:
             response = forward_to_resolver(data, use_tcp=False)
-            response_data = decode_dns_response(response, question_end_index, query_data)
+            response_data = decode_dns_response(
+                response, question_end_index, query_data
+            )
 
             log_request(response_data)
             sock.sendto(response, addr)
         except Exception as e:
             print(f"Error handling UDP request from {addr}: {e}")
-            log_error(e, source=f"UDP request from {addr}", data=str(data), query_data=query_data)
+            log_error(
+                e,
+                source=f"UDP request from {addr}",
+                data=str(data),
+                query_data=query_data,
+            )
     except Exception as e:
         print(f"Error handling UDP request from {addr}: {e}")
-        log_error(e, source=f"UDP request from {addr}", data=str(data), query_data="no query data")
+        log_error(
+            e,
+            source=f"UDP request from {addr}",
+            data=str(data),
+            query_data="no query data",
+        )
 
 
 def handle_dns_request_tcp(client_socket):
@@ -52,13 +64,15 @@ def handle_dns_request_tcp(client_socket):
         _transaction_id, question_end_index, query_data = decode_dns_query(data)
         try:
             response = forward_to_resolver(data, use_tcp=True)
-            response_data = decode_dns_response(response, question_end_index, query_data)
+            response_data = decode_dns_response(
+                response, question_end_index, query_data
+            )
 
             log_request(response_data)
             client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
         except Exception as e:
             print(f"Error handling TCP request: {e}")
-            log_error(e, source="TCP request",  data=str(data), query_data=query_data)
+            log_error(e, source="TCP request", data=str(data), query_data=query_data)
     except Exception as e:
         print(f"Error handling TCP request: {e}")
         log_error(e, source="TCP request", data="no data", query_data="no query data")
@@ -73,7 +87,9 @@ def start_udp_server():
 
     while True:
         data, addr = udp_sock.recvfrom(BUFFER_SIZE)
-        threading.Thread(target=handle_dns_request_udp, args=(udp_sock, data, addr)).start()
+        threading.Thread(
+            target=handle_dns_request_udp, args=(udp_sock, data, addr)
+        ).start()
 
 
 def start_tcp_server():
@@ -84,7 +100,7 @@ def start_tcp_server():
     print(f"DNS Proxy listening on TCP {LISTEN_HOST}:{LISTEN_PORT}")
 
     while True:
-        client_socket, addr = tcp_sock.accept()
+        client_socket, _addr = tcp_sock.accept()
         threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
 
 
