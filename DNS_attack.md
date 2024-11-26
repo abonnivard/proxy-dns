@@ -57,7 +57,7 @@ L’attaque **SigJam** de classe KeyTrap, détaillée dans des études récentes
   - L'attaquant configure une zone DNS contenant de nombreuses signatures malveillantes, toutes pointant vers une clé DNSKEY.
   - Une seule requête malveillante peut forcer le résolveur à effectuer des centaines de calculs cryptographiques, saturant ses ressources.
 
-- **Vulnérabilités associées :**
+- **Vulnérabilité associée :**
   - **CVE-2023-50387**
 
 ### Exemple d'attaque exploitant une faille DNS avec NXNSAttack :
@@ -71,7 +71,7 @@ L'attaque **NXNSAttack** exploite le mécanisme de délégation des requêtes DN
   3. **Délégation excessive** : Le serveur autoritaire malveillant renvoie une réponse contenant une longue liste de serveurs de noms non pertinents ou faux pour déléguer la résolution.
   4. **Amplification** : Le résolveur contacte chaque serveur listé, amplifiant ainsi le trafic réseau avec des requêtes inutiles, ce qui peut submerger les ressources réseau et CPU.
 
-- **Vulnérabilités associées :**
+- **Vulnérabilité associée :**
   - **CVE-2020-12667**
 
 ---
