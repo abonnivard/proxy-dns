@@ -32,27 +32,32 @@ def handle_dns_request_udp(sock, data, addr):
         _transaction_id, question_end_index, query_data = decode_dns_query(data)
         try:
             response = forward_to_resolver(data, use_tcp=False)
+            rcode = response[3] & 0x0F  # Récupère le rcode des flags
             response_data = decode_dns_response(
                 response, question_end_index, query_data
             )
 
-            log_request(response_data)
+            # Vérification du rcode et des réponses attendues
+            if rcode == 3:  # NXDOMAIN
+                assert response_data["answer"] == 0, "NXDOMAIN mais des réponses détectées"
+
+            log_request(response_data, rcode)
             sock.sendto(response, addr)
         except Exception as e:
-            print(f"Error handling UDP request from {addr}: {e}")
             log_error(
                 e,
                 source=f"UDP request from {addr}",
-                data=str(data),
                 query_data=query_data,
+                answer_data=str(response) if 'response' in locals() else "No response data",
+                query_data_raw=str(data),
             )
     except Exception as e:
-        print(f"Error handling UDP request from {addr}: {e}")
         log_error(
             e,
             source=f"UDP request from {addr}",
-            data=str(data),
-            query_data="no query data",
+            query_data=str(data),
+            answer_data="no answer data",
+            query_data_raw="no query data",
         )
 
 
@@ -71,10 +76,8 @@ def handle_dns_request_tcp(client_socket):
             log_request(response_data)
             client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
         except Exception as e:
-            print(f"Error handling TCP request: {e}")
             log_error(e, source="TCP request", data=str(data), query_data=query_data)
     except Exception as e:
-        print(f"Error handling TCP request: {e}")
         log_error(e, source="TCP request", data="no data", query_data="no query data")
     finally:
         client_socket.close()
