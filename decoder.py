@@ -86,13 +86,14 @@ def decode_dns_response(data, index, query_data):
     """Décode la réponse DNS et retourne un dictionnaire structuré."""
     header = struct.unpack("!6H", data[:12])  # 12 premiers octets de l'en-tête
     an_count = header[3]  # Nombre d'enregistrements de réponse
-
+    rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
         "query": query_data,  # Les données de la requête
+        "rcode": rcode,
     }
 
     for _ in range(an_count):
@@ -161,29 +162,39 @@ def decode_dns_response(data, index, query_data):
             )
             index += rdlength - 6
         elif rtype == 65:  # Enregistrement HTTPS spécifique
+            """
             try:
-                # Vérifier la longueur de l'enregistrement pour éviter l'index out of range
-                if rdlength < 6:
-                    raise ValueError(
-                        f"Enregistrement HTTPS trop court : rdlength={rdlength}"
-                    )
+                # Vérifie que l'enregistrement a une longueur suffisante
+                if rdlength < 2:
+                    raise ValueError(f"Enregistrement HTTPS trop court : rdlength={rdlength}")
+                
+                print(f"RDATA brut (longueur {rdlength}): {data[index:index + rdlength].hex()}")
+                # Extrait la priorité (2 premiers octets)
+                priority = struct.unpack("!H", data[index: index + 2])[0]
+                index += 2
 
-                # L'enregistrement HTTPS peut contenir une série de données dans un format particulier
-                priority, weight, port = struct.unpack("!HHH", data[index : index + 6])
-                index += 6
-                if rdlength > 6:
-                    target = decode_domain_name(data, index)
-                    record["data"] = (
-                        f"Priority={priority}, Weight={weight}, Port={port}, Target={target}"
-                    )
-                    index += rdlength - 6
+                # Vérifie si une cible est spécifiée
+                if rdlength > 2:
+                    # Avant décodage
+                    print(f"Position avant TargetName: {index}, Données: {data[index:index + 10].hex()}")
+
+                    # Décodage du TargetName
+                    target_name = decode_domain_name(data, index)
+
+                    # Après décodage
+                    print(f"TargetName décodé: {target_name}")
+                    print(
+                        f"Position après TargetName: {index}, Longueur calculée: {len(target_name.encode('utf-8')) + 2}")
+                    record["data"] = f"Priority={priority}, Target={target}"
                 else:
-                    record["data"] = (
-                        f"Priority={priority}, Weight={weight}, Port={port}, Target=None"
-                    )
+                    record["data"] = f"Priority={priority}, Target=None"
+
+                # Met à jour l'index selon la longueur de l'enregistrement
+                index += rdlength - 2
             except Exception as e:
                 record["data"] = f"Erreur de traitement de l'enregistrement HTTPS : {e}"
                 index += rdlength
+            """
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
