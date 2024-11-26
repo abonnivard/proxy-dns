@@ -57,7 +57,22 @@ L’attaque **SigJam** de classe KeyTrap, détaillée dans des études récentes
   - L'attaquant configure une zone DNS contenant de nombreuses signatures malveillantes, toutes pointant vers une clé DNSKEY.
   - Une seule requête malveillante peut forcer le résolveur à effectuer des centaines de calculs cryptographiques, saturant ses ressources.
 
+- **Vulnérabilités associées :**
+  - **CVE-2023-50387**
 
+### Exemple d'attaque exploitant une faille DNS avec NXNSAttack :
+
+L'attaque **NXNSAttack** exploite le mécanisme de délégation des requêtes DNS dans les serveurs récursifs. Elle tire parti de la manière dont un résolveur suit les instructions fournies par des serveurs DNS autoritaires pour résoudre un nom de domaine, générant ainsi un volume massif de trafic indésirable.
+
+
+- **Mécanisme :**
+  1. **Configuration malveillante** : L'attaquant configure une zone DNS avec des délégations malveillantes. La délégation désigne un ensemble de serveurs de noms inexistants ou contrôlés par l'attaquant (e.g., `ns1.fake-server.com`, `ns2.fake-server.com`, etc.).
+  2. **Injection de requête** : L'attaquant envoie une requête pour un sous-domaine dans cette zone (e.g., `malicious.domaine.com`), forçant le résolveur à demander une résolution.
+  3. **Délégation excessive** : Le serveur autoritaire malveillant renvoie une réponse contenant une longue liste de serveurs de noms non pertinents ou faux pour déléguer la résolution.
+  4. **Amplification** : Le résolveur contacte chaque serveur listé, amplifiant ainsi le trafic réseau avec des requêtes inutiles, ce qui peut submerger les ressources réseau et CPU.
+
+- **Vulnérabilités associées :**
+  - **CVE-2020-12667**
 
 ---
 
@@ -65,9 +80,11 @@ L’attaque **SigJam** de classe KeyTrap, détaillée dans des études récentes
 
 - [Attaques par amplification DNS - Explications et contre-mesures (Cloudflare)](https://www.cloudflare.com/fr-fr/learning/ddos/dns-amplification-ddos-attack/)
 
-- [Attaques par sous domaines aléatoire - Explication](https://www.akamai.com/fr/glossary/what-are-pseudo-random-subdomain-attacks)
+- [Attaques par sous domaine aléatoire - Explications](https://www.akamai.com/fr/glossary/what-are-pseudo-random-subdomain-attacks)
 
 - [Attaques sur la compléxité des resolvers DNS - KeyTrap: Vulnérabilité critique dans l'infrastructure Internet](https://www.athene-center.de/keytrap)
+
+- [Attaques sur la complexité des résolveurs DNS - NXNSAttack](https://nvd.nist.gov/vuln/detail/CVE-2020-12667)
 
 - [RFC 8482 - Comment minimiser la réponse d'une requête DNS de type ANY](https://datatracker.ietf.org/doc/html/rfc8482)
 
