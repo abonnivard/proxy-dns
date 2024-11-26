@@ -63,6 +63,7 @@ def handle_dns_request_udp(sock, data, addr):
 
 def handle_dns_request_tcp(client_socket):
     """Handles a DNS request over TCP."""
+    print("Inside")
     try:
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
         data = client_socket.recv(message_length)
@@ -103,8 +104,13 @@ def start_tcp_server():
     print(f"DNS Proxy listening on TCP {LISTEN_HOST}:{LISTEN_PORT}")
 
     while True:
-        client_socket, _addr = tcp_sock.accept()
-        threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
+        print("ok")
+        try:
+            client_socket, _addr = tcp_sock.accept()
+            print(client_socket, _addr)
+            threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
+        except Exception as e:
+            print(e)
 
 
 def main():
