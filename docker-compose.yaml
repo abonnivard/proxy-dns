@@ -4,6 +4,7 @@ services:
     container_name: dns_proxy
     ports:
       - "53:53/udp"
+      - "53:53/tcp"
     depends_on:
       - elasticsearch
     environment:
