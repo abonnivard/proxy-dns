@@ -41,12 +41,12 @@ def handle_dns_request_udp(sock, data, addr):
             if rcode == 3:  # NXDOMAIN
                 assert response_data["answer"] == 0, "NXDOMAIN mais des réponses détectées"
 
-            log_request(response_data, rcode)
+            log_request(response_data, rcode, source="UDP")
             sock.sendto(response, addr)
         except Exception as e:
             log_error(
                 e,
-                source=f"UDP request from {addr}",
+                source=f"UDP",
                 query_data=query_data,
                 answer_data=str(response) if 'response' in locals() else "No response data",
                 query_data_raw=str(data),
@@ -54,7 +54,7 @@ def handle_dns_request_udp(sock, data, addr):
     except Exception as e:
         log_error(
             e,
-            source=f"UDP request from {addr}",
+            source=f"UDP",
             query_data=str(data),
             answer_data="no answer data",
             query_data_raw="no query data",
@@ -63,23 +63,26 @@ def handle_dns_request_udp(sock, data, addr):
 
 def handle_dns_request_tcp(client_socket):
     """Handles a DNS request over TCP."""
-    print("Inside")
     try:
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
         data = client_socket.recv(message_length)
         _transaction_id, question_end_index, query_data = decode_dns_query(data)
-        try:
-            response = forward_to_resolver(data, use_tcp=True)
-            response_data = decode_dns_response(
-                response, question_end_index, query_data
-            )
 
-            log_request(response_data)
-            client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
-        except Exception as e:
-            log_error(e, source="TCP request", data=str(data), query_data=query_data)
+        response = forward_to_resolver(data, use_tcp=True)
+        response_data = decode_dns_response(
+            response, question_end_index, query_data
+        )
+        rcode = response[3] & 0x0F  # Récupère le rcode des flags
+
+        log_request(response_data, rcode, source="TCP")
+        client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
     except Exception as e:
-        log_error(e, source="TCP request", data="no data", query_data="no query data")
+        log_error(e,
+                  source="TCP",
+                  query_data_raw=str(data) if 'data' in locals() else "No query data",
+                  query_data=query_data if 'query_data' in locals() else "No query data",
+                  answer_data=str(response) if 'response' in locals() else "No response data",
+                  )
     finally:
         client_socket.close()
 
@@ -104,13 +107,11 @@ def start_tcp_server():
     print(f"DNS Proxy listening on TCP {LISTEN_HOST}:{LISTEN_PORT}")
 
     while True:
-        print("ok")
         try:
             client_socket, _addr = tcp_sock.accept()
-            print(client_socket, _addr)
             threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
         except Exception as e:
-            print(e)
+            print(f"TCP loop exception : {e}")
 
 
 def main():

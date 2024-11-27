@@ -5,8 +5,9 @@ ES_HOST = "http://elasticsearch:9200/"
 es = Elasticsearch([ES_HOST])
 
 
-def full_log_request(response_data, rcode):
+def full_log_request(response_data, rcode, source):
     log_data = {
+        "source": source,
         "timestamp": datetime.utcnow(),
         "answers_count": response_data["answer"],
         "rcode": rcode,
@@ -29,13 +30,14 @@ def full_log_request(response_data, rcode):
     es.index(index="proxy_logs_full", body=log_data)
 
 
-def log_request(response_data, rcode):
+def log_request(response_data, rcode, source):
     """
     Fonction pour logger une requête DNS dans Elasticsearch.
     """
-    full_log_request(response_data, rcode)
+    full_log_request(response_data, rcode, source)
 
     log_data = {
+        "source": source,
         "timestamp": datetime.utcnow(),
         "answers_count": response_data["answer"],
         "rcode": rcode,

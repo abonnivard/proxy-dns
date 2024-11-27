@@ -15,6 +15,7 @@ COPY . .
 
 # Expose the DNS port
 EXPOSE 53/udp
+EXPOSE 53/tcp
 
 # Set environment variables (if needed)
 ENV PYTHONUNBUFFERED=1

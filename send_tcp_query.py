@@ -40,7 +40,7 @@ if __name__ == "__main__":
     )
 
     # Adresse IP du serveur DNS
-    dns_server = "127.0.0.1"  # Changez pour l'IP de votre serveur DNS
+    dns_server = "159.65.55.92"  # Changez pour l'IP de votre serveur DNS
 
     # Port du serveur DNS
     dns_port = 53
