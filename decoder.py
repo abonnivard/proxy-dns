@@ -20,6 +20,9 @@ This section appears in responses and contains the resolved data.
 import struct
 import socket
 
+LISTEN_PORT = 53
+DNS_SERVER = "8.8.8.8"
+
 
 def query_type_to_string(qtype):
     """Maps a DNS query type number to its corresponding string representation."""
@@ -41,7 +44,7 @@ def query_type_to_string(qtype):
         65: "HTTPS",  # HTTPS specific record
     }
 
-    return query_type_map.get(qtype, f"Unknown query type: {qtype}")
+    return query_type_map.get(qtype, f"{qtype}")
 
 
 def decode_dns_query(data):
@@ -63,7 +66,10 @@ def decode_dns_query(data):
         length = data[index]
         if length == 0:
             break
-        qname.append(data[index + 1 : index + 1 + length].decode("utf-8"))
+        try:
+            qname.append(data[index + 1 : index + 1 + length].decode("utf-8"))
+        except UnicodeDecodeError:
+            raise ValueError(f"Invalid domain name character: {data[index + 1 : index + 1 + length]}")
         index += length + 1
 
     qname = ".".join(qname)
@@ -89,11 +95,19 @@ def decode_dns_response(data, index, query_data):
     rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
+    flags = header[1]
+    tc_bit = (flags & 0b00000010) >> 1
+    if tc_bit == 1:
+        print("Réponse tronquée détectée. Requête TCP nécessaire : " + str(data))
+        return relaunch_query_over_tcp(query_data)
+
+
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
         "query": query_data,  # Les données de la requête
         "rcode": rcode,
+
     }
 
     for _ in range(an_count):
@@ -228,3 +242,44 @@ def decode_domain_name(data, index):
         labels.append(data[index + 1 : index + 1 + length].decode("utf-8"))
         index += length + 1
     return ".".join(labels)
+
+
+def relaunch_query_over_tcp(query_data):
+    """Relance une requête DNS sur TCP en cas de réponse tronquée."""
+    try:
+        # Création de la socket TCP
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(5)  # Timeout de 5 secondes pour éviter les blocages
+            sock.connect((DNS_SERVER, LISTEN_PORT))
+
+            # Préfixer la requête avec sa longueur (2 octets)
+            tcp_query = struct.pack("!H", len(query_data)) + query_data
+            sock.sendall(tcp_query)  # Envoi de la requête
+
+            # Lecture de la réponse
+            # Les 2 premiers octets indiquent la longueur de la réponse
+            response_length_data = sock.recv(2)
+            if len(response_length_data) < 2:
+                raise ValueError("Impossible de lire la longueur de la réponse.")
+
+            response_length = struct.unpack("!H", response_length_data)[0]
+            print(f"Longueur attendue de la réponse : {response_length} octets")
+
+            # Lire la réponse complète
+            response = b""
+            while len(response) < response_length:
+                chunk = sock.recv(response_length - len(response))
+                if not chunk:
+                    break
+                response += chunk
+
+            if len(response) != response_length:
+                raise ValueError("Réponse incomplète reçue via TCP.")
+            print("Réponse complète reçue via TCP : ", response)
+            return response
+
+    except socket.timeout:
+        raise TimeoutError("La requête TCP a expiré.")
+    except Exception as e:
+        raise RuntimeError(f"Erreur lors de la requête TCP : {e}")
+

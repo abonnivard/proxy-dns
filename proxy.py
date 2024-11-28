@@ -1,4 +1,5 @@
 import socket
+import struct
 import threading
 from decoder import decode_dns_query, decode_dns_response
 from logger import log_request, log_error
@@ -112,6 +113,7 @@ def start_tcp_server():
             threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
         except Exception as e:
             print(f"TCP loop exception : {e}")
+
 
 
 def main():
