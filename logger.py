@@ -84,7 +84,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data):
     except Exception:
         pass
     try:
-        log_data["query_type"] = query_data[1]
+        log_data["query_type"] = query_data[1] if str(query_data[1]).isdigit() else None
     except Exception:
         pass
     try:
