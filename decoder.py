@@ -82,7 +82,7 @@ def decode_dns_query(data):
     assert qclass == 1, f"Expected class 1, got {qclass}"
     assert qd_count == 1, f"Expected 1 question, got {qd_count}"
     assert an_count == 0, f"Expected 0 answers, got {an_count}"
-    assert str(qtype).isdigit() == True, f"Expected a number, got {qtype}"
+    assert isinstance(qtype, int), f"Expected qtype to be an integer, got {qtype} of type {type(qtype)}"
 
     data = (qname, qtype, qclass)
 
