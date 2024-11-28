@@ -75,7 +75,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data):
 
     error_message_str = str(error_message)
 
-    if "Expected 0 answers, got" not in error_message_str:
+    if "Expected at least 1 answer, got" not in error_message_str:
         log_data = {
             "timestamp": datetime.utcnow(),
             "type": source,
