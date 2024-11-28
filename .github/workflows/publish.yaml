@@ -3,7 +3,7 @@ name: CI/CD with DevSecOps
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   publish-docker-images:
