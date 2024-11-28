@@ -72,24 +72,28 @@ def log_request(response_data, rcode, source):
 
 
 def log_error(error_message, source, query_data_raw, query_data, answer_data):
-    log_data = {
-        "timestamp": datetime.utcnow(),
-        "type": source,
-        "error_message": str(error_message),
-        "query_data_raw": query_data_raw,
-        "answer_data": answer_data,
-    }
-    try:
-        log_data["query_qname"] = query_data[0]
-    except Exception:
-        pass
-    try:
-        log_data["query_type"] = query_data[1] if str(query_data[1]).isdigit() else None
-    except Exception:
-        pass
-    try:
-        log_data["query_class"] = query_data[2]
-    except Exception:
-        pass
 
-    es.index(index="proxy_errors", body=log_data)
+    error_message_str = str(error_message)
+
+    if "Expected 0 answers, got" not in error_message_str:
+        log_data = {
+            "timestamp": datetime.utcnow(),
+            "type": source,
+            "error_message": str(error_message),
+            "query_data_raw": query_data_raw,
+            "answer_data": answer_data,
+        }
+        try:
+            log_data["query_qname"] = query_data[0]
+        except Exception:
+            pass
+        try:
+            log_data["query_type"] = query_data[1] if str(query_data[1]).isdigit() else None
+        except Exception:
+            pass
+        try:
+            log_data["query_class"] = query_data[2]
+        except Exception:
+            pass
+
+        es.index(index="proxy_errors", body=log_data)
