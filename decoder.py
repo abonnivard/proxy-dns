@@ -69,7 +69,7 @@ def decode_dns_query(data):
         try:
             qname.append(data[index + 1 : index + 1 + length].decode("utf-8"))
         except UnicodeDecodeError:
-            raise ValueError(f"Invalid domain name character: {data[index + 1 : index + 1 + length]}")
+            qname.append((f"Invalid domain name character: {data[index + 1 : index + 1 + length]}"))
         index += length + 1
 
     qname = ".".join(qname)
