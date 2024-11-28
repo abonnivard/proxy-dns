@@ -1,5 +1,4 @@
 import socket
-import struct
 import threading
 from decoder import decode_dns_query, decode_dns_response
 from logger import log_request, log_error

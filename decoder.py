@@ -230,17 +230,17 @@ def decode_domain_name(data, index):
 
     while True:
         if index >= len(data):
-            raise IndexError(f"Index {index} out of range for data length {len(data)}")
+            raise IndexError(f"Index out of range for data length")
 
         length = data[index]
 
         # Pointeur compressé (2 octets)
         if length & 0xC0 == 0xC0:
             if index + 1 >= len(data):
-                raise IndexError(f"Pointer at index {index} out of range")
+                raise IndexError(f"Pointer index out of range")
             pointer = ((length & 0x3F) << 8) | data[index + 1]
             if pointer in visited_offsets:
-                raise ValueError(f"Infinite loop detected in pointer at {pointer}")
+                raise ValueError(f"Infinite loop detected in pointer")
             visited_offsets.add(pointer)
             labels.append(decode_domain_name(data, pointer)[0])
             return ".".join(labels), index + 2
@@ -251,12 +251,12 @@ def decode_domain_name(data, index):
 
         # Longueur invalide (au-delà de 63 octets)
         if length > 63:
-            raise ValueError(f"Invalid label length {length} at index {index}")
+            raise ValueError(f"Invalid label length")
 
         # Lire le label
         index += 1
         if index + length > len(data):
-            raise IndexError(f"Label length out of range at index {index}")
+            raise IndexError(f"Label length out of range")
         labels.append(data[index:index + length].decode("utf-8"))
         index += length
 
