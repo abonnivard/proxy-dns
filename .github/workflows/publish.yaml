@@ -14,10 +14,10 @@ jobs:
 
       # CodeQL pour l'analyse statique du code
       - name: Set up CodeQL
-        uses: github/codeql-action/setup@v2
+        uses: github/codeql-action/setup-codeql@v3
 
       - name: Analyze code with CodeQL
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
       # Trivy pour scanner les images Docker
       - name: Set up Docker
