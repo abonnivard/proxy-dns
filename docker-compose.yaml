@@ -7,8 +7,6 @@ services:
       - "53:53/tcp"
     depends_on:
       - elasticsearch
-    environment:
-      - ES_HOST=http://elasticsearch:9200
     cap_add:
       - NET_ADMIN    # Add necessary capabilities to bind to port 53
     networks:

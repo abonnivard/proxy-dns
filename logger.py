@@ -1,7 +1,20 @@
+import os
 from datetime import datetime
 from elasticsearch import Elasticsearch
 
 ES_HOST = "http://elasticsearch:9200/"
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
+
+if ENVIRONMENT == "dev":
+    ES_HOST = "http://elasticsearch:9200/"
+else:
+    ES_HOST = "http://elasticsearch:9200/"
+    ES_USERNAME = os.getenv("ES_USERNAME", "default_user")
+    ES_PASSWORD = os.getenv("ES_PASSWORD", "default_password")
+    es = Elasticsearch([ES_HOST], http_auth=(ES_USERNAME, ES_PASSWORD))
+
+
 es = Elasticsearch([ES_HOST])
 
 
