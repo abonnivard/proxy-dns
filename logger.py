@@ -15,7 +15,7 @@ else:
     print(f"ES_USERNAME: {ES_USERNAME}")
     ES_PASSWORD = os.getenv("ES_PASSWORD", "default_password")
     print(f"ES_PASSWORD: {ES_PASSWORD}")
-    es = Elasticsearch(f"http://{ES_USERNAME}:{ES_PASSWORD}@localhost:9200/")
+    es = Elasticsearch(f"http://{ES_USERNAME}:{ES_PASSWORD}@elasticsearch:9200/")
 
 
 es = Elasticsearch([ES_HOST])
