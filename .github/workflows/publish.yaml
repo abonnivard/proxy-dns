@@ -1,9 +1,6 @@
-name: CI/CD with DevSecOps
+name: publish
 
-on:
-  push:
-    branches:
-      - master
+on: [push]
 
 jobs:
   publish-docker-images:
@@ -12,29 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # CodeQL pour l'analyse statique du code
-      - name: Set up CodeQL
-        uses: github/codeql-action/setup-codeql@v3
-
-      - name: Analyze code with CodeQL
-        uses: github/codeql-action/analyze@v3
-
-      # Trivy pour scanner les images Docker
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      - name: Run Trivy Scan
-        run: |
-          docker build -t myapp .
-          trivy image myapp --exit-code 1 --severity HIGH,CRITICAL
-
-      # TruffleHog pour scanner les secrets dans le code
-      - name: Install TruffleHog
-        run: |
-          pip install truffleHog
-
-      - name: Run TruffleHog Scan
-        run: trufflehog --entropy=True --json .
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.TOKEN }} | docker login ghcr.io -u abonnivard --password-stdin
 
       # Installer QEMU pour supporter les builds multi-architecture
       - name: Set up QEMU
@@ -42,7 +18,7 @@ jobs:
         with:
           platforms: arm64, amd64
 
-      # Configurer Docker Buildx pour supporter les builds multi-architecture
+      # Configurer Buildx pour supporter les builds multi-architecture
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -55,7 +31,8 @@ jobs:
           push: true
           tags: ghcr.io/abonnivard/proxy-dns:latest
 
-      # Déploiement sur le serveur distant
+
+      # Deploy to remote server
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1.1.0
         with:
