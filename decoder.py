@@ -227,23 +227,33 @@ def decode_dns_response(data, index, query_data):
 def decode_domain_name(data, index):
     """Helper function to decode compressed domain names in DNS responses."""
     labels = []
-    while True:
-        length = data[index]
+    try:
+        while True:
+            length = data[index]
 
-        if length == 0:
-            index += 1
-            break
+            if length == 0:  # End of the domain name
+                index += 1
+                break
 
-        if length & 0xC0 == 0xC0:
-            pointer = struct.unpack("!H", data[index : index + 2])[0]
-            pointer &= 0x3FFF
-            labels.append(decode_domain_name(data, pointer))
-            index += 2
-            break
+            if length & 0xC0 == 0xC0:  # Pointer to another part of the packet
+                pointer = struct.unpack("!H", data[index : index + 2])[0]
+                pointer &= 0x3FFF
+                labels.append(decode_domain_name(data, pointer))  # Recursive call
+                index += 2
+                break
 
-        labels.append(data[index + 1 : index + 1 + length].decode("utf-8"))
-        index += length + 1
+            # Decode UTF-8 label
+            label = data[index + 1 : index + 1 + length]
+            try:
+                labels.append(label.decode("utf-8"))
+            except UnicodeDecodeError:
+                labels.append(f"Invalid({label.hex()})")  # Store invalid data as hex
+            index += length + 1
+    except IndexError:
+        raise ValueError(f"Index out of range while decoding domain name. Data: {data.hex()}")
+
     return ".".join(labels)
+
 
 
 def relaunch_query_over_tcp(query_data):
