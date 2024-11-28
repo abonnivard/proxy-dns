@@ -67,7 +67,7 @@ def decode_dns_query(data):
         if length == 0:
             break
         try:
-            qname.append(data[index + 1 : index + 1 + length].decode("utf-8"))
+             qname.append(data[index + 1: index + 1 + length].decode("utf-8", errors="replace"))
         except UnicodeDecodeError:
             print(f"Invalid domain name character: {data[index + 1 : index + 1 + length]}")
             qname.append("error")
