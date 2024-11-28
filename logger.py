@@ -5,13 +5,16 @@ from elasticsearch import Elasticsearch
 ES_HOST = "http://elasticsearch:9200/"
 
 ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
+print(f"Environment: {ENVIRONMENT}")
 
 if ENVIRONMENT == "dev":
     ES_HOST = "http://elasticsearch:9200/"
 else:
     ES_HOST = "http://elasticsearch:9200/"
     ES_USERNAME = os.getenv("ES_USERNAME", "default_user")
+    print(f"ES_USERNAME: {ES_USERNAME}")
     ES_PASSWORD = os.getenv("ES_PASSWORD", "default_password")
+    print(f"ES_PASSWORD: {ES_PASSWORD}")
     es = Elasticsearch([ES_HOST], http_auth=(ES_USERNAME, ES_PASSWORD))
 
 
