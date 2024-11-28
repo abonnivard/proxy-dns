@@ -225,34 +225,40 @@ def decode_dns_response(data, index, query_data):
 
 
 def decode_domain_name(data, index):
-    """Helper function to decode compressed domain names in DNS responses."""
     labels = []
-    try:
-        while True:
-            length = data[index]
+    visited_offsets = set()  # Empêche les boucles infinies
 
-            if length == 0:  # End of the domain name
-                index += 1
-                break
+    while True:
+        length = data[index]
 
-            if length & 0xC0 == 0xC0:  # Pointer to another part of the packet
-                pointer = struct.unpack("!H", data[index : index + 2])[0]
-                pointer &= 0x3FFF
-                labels.append(decode_domain_name(data, pointer))  # Recursive call
-                index += 2
-                break
+        if length == 0:  # Fin des labels
+            index += 1
+            break
 
-            # Decode UTF-8 label
-            label = data[index + 1 : index + 1 + length]
-            try:
-                labels.append(label.decode("utf-8"))
-            except UnicodeDecodeError:
-                labels.append(f"Invalid({label.hex()})")  # Store invalid data as hex
-            index += length + 1
-    except IndexError:
-        raise ValueError(f"Index out of range while decoding domain name. Data: {data.hex()}")
+        if length & 0xC0 == 0xC0:  # Pointeur compressé
+            if index + 1 >= len(data):
+                raise IndexError(f"Invalid pointer at index {index}, data length: {len(data)}")
+
+            pointer = struct.unpack("!H", data[index : index + 2])[0] & 0x3FFF
+            if pointer in visited_offsets:
+                raise ValueError(f"Infinite loop detected in pointer compression at {pointer}")
+
+            visited_offsets.add(pointer)
+
+            if pointer >= len(data):
+                raise IndexError(f"Pointer out of range: {pointer}, data length: {len(data)}")
+            index += 2
+            labels.append(decode_domain_name(data, pointer))
+            break
+
+        if index + 1 + length > len(data):
+            raise IndexError(f"Label length out of range: index={index}, length={length}, data length={len(data)}")
+
+        labels.append(data[index + 1 : index + 1 + length].decode("utf-8", errors="replace"))
+        index += length + 1
 
     return ".".join(labels)
+
 
 
 
