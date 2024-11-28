@@ -42,7 +42,16 @@ def handle_dns_request_udp(sock, data, addr):
             if rcode == 3:  # NXDOMAIN
                 assert response_data["answer"] == 0, "NXDOMAIN mais des réponses détectées"
 
-            log_request(response_data, rcode, source="UDP")
+            if query_data[0] == 'error':
+                log_error(
+                    "Invalid qname decode query",
+                    source=f"UDP",
+                    query_data=query_data,
+                    answer_data=str(response),
+                    query_data_raw=str(data),
+                )
+            else:
+                log_request(response_data, rcode, source="UDP")
             sock.sendto(response, addr)
         except Exception as e:
             log_error(
