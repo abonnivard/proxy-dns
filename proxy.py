@@ -52,7 +52,7 @@ def handle_dns_request_udp(sock, data, addr):
                     client_address=client_ip
                 )
             else:
-                log_request(response_data, rcode, source="UDP", client_address=addr)
+                log_request(response_data, rcode, source="UDP", client_address=client_ip)
             sock.sendto(response, addr)
         except Exception as e:
             log_error(
