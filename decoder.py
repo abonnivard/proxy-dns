@@ -90,7 +90,7 @@ def decode_dns_query(data):
 
 
 # Décode une réponse DNS et retourne un dictionnaire structuré
-def decode_dns_response(data, index, query_data):
+def decode_dns_response(data, index, query_data, raw_query_data=None):
     """Décode la réponse DNS et retourne un dictionnaire structuré."""
     header = struct.unpack("!6H", data[:12])  # 12 premiers octets de l'en-tête
     an_count = header[3]  # Nombre d'enregistrements de réponse
@@ -101,7 +101,7 @@ def decode_dns_response(data, index, query_data):
     tc_bit = (flags & 0b00000010) >> 1
     if tc_bit == 1:
         print("Réponse tronquée détectée. Requête TCP nécessaire : " + str(data))
-        return relaunch_query_over_tcp(query_data)
+        return relaunch_query_over_tcp(raw_query_data)
 
 
     return_list = {

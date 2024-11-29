@@ -35,7 +35,7 @@ def handle_dns_request_udp(sock, data, addr):
             response = forward_to_resolver(data, use_tcp=False)
             rcode = response[3] & 0x0F  # Récupère le rcode des flags
             response_data = decode_dns_response(
-                response, question_end_index, query_data
+                response, question_end_index, query_data, data
             )
 
             # Vérification du rcode et des réponses attendues
@@ -85,7 +85,7 @@ def handle_dns_request_tcp(client_socket, client_addr):
 
             response = forward_to_resolver(data, use_tcp=True)
             response_data = decode_dns_response(
-                response, question_end_index, query_data
+                response, question_end_index, query_data, data
             )
             rcode = response[3] & 0x0F  # Récupère le rcode des flags
 
