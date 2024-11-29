@@ -97,12 +97,14 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
     rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
+
+    """
     flags = header[1]
     tc_bit = (flags & 0b00000010) >> 1
     if tc_bit == 1:
         print("Réponse tronquée détectée. Requête TCP nécessaire : " + str(data))
         return relaunch_query_over_tcp(raw_query_data)
-
+    """
 
     return_list = {
         "answer": an_count,
