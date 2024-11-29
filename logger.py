@@ -18,7 +18,7 @@ else:
 
 
 
-def full_log_request(response_data, rcode, source):
+def full_log_request(response_data, rcode, source, client_address):
     log_data = {
         "source": source,
         "timestamp": datetime.utcnow(),
@@ -27,6 +27,7 @@ def full_log_request(response_data, rcode, source):
         "query_qname": response_data["query"][0],
         "query_type": response_data["query"][1],
         "query_class": response_data["query"][2],
+        "client_address": client_address,
         "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
@@ -46,11 +47,11 @@ def full_log_request(response_data, rcode, source):
     es.index(index="proxy_logs_full", body=log_data)
 
 
-def log_request(response_data, rcode, source):
+def log_request(response_data, rcode, source, client_address):
     """
     Fonction pour logger une requête DNS dans Elasticsearch.
     """
-    full_log_request(response_data, rcode, source)
+    full_log_request(response_data, rcode, source, client_address)
 
     log_data = {
         "source": source,
@@ -76,7 +77,7 @@ def log_request(response_data, rcode, source):
     es.index(index="proxy_logs", body=log_data)
 
 
-def log_error(error_message, source, query_data_raw, query_data, answer_data):
+def log_error(error_message, source, query_data_raw, query_data, answer_data, client_address):
 
     error_message_str = str(error_message)
 
@@ -87,6 +88,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data):
             "error_message": error_message_str,
             "query_data_raw": query_data_raw,
             "answer_data": answer_data,
+            "client_address": client_address,
         }
         try:
             log_data["query_qname"] = query_data[0]

@@ -48,9 +48,10 @@ def handle_dns_request_udp(sock, data, addr):
                     query_data=query_data,
                     answer_data=str(response),
                     query_data_raw=str(data),
+                    client_address=addr
                 )
             else:
-                log_request(response_data, rcode, source="UDP")
+                log_request(response_data, rcode, source="UDP", client_address=addr)
             sock.sendto(response, addr)
         except Exception as e:
             log_error(
@@ -59,6 +60,7 @@ def handle_dns_request_udp(sock, data, addr):
                 query_data=query_data,
                 answer_data=str(response) if 'response' in locals() else "No response data",
                 query_data_raw=str(data),
+                client_address=addr
             )
     except Exception as e:
         log_error(
@@ -67,10 +69,11 @@ def handle_dns_request_udp(sock, data, addr):
             query_data=str(data),
             answer_data="no answer data",
             query_data_raw="no query data",
+            client_address=addr
         )
 
 
-def handle_dns_request_tcp(client_socket):
+def handle_dns_request_tcp(client_socket, client_addr):
     """Handles a DNS request over TCP."""
     try:
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
@@ -93,6 +96,7 @@ def handle_dns_request_tcp(client_socket):
                 query_data=query_data,
                 answer_data=str(response) if 'response' in locals() else "No response data",
                 query_data_raw=str(data),
+                client_address=client_addr
             )
     except Exception as e:
         log_error(e,
@@ -100,6 +104,7 @@ def handle_dns_request_tcp(client_socket):
                   query_data_raw=str(data) if 'data' in locals() else "No query data",
                   query_data=query_data if 'query_data' in locals() else "No query data",
                   answer_data=str(response) if 'response' in locals() else "No response data",
+                  client_address=client_addr
                   )
     finally:
         client_socket.close()
@@ -126,8 +131,8 @@ def start_tcp_server():
 
     while True:
         try:
-            client_socket, _addr = tcp_sock.accept()
-            threading.Thread(target=handle_dns_request_tcp, args=(client_socket,)).start()
+            client_socket, addr = tcp_sock.accept()
+            threading.Thread(target=handle_dns_request_tcp, args=(client_socket,addr)).start()
         except Exception as e:
             print(f"TCP loop exception : {e}")
 
