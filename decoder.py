@@ -269,7 +269,10 @@ def decode_domain_name(data, index):
         index += 1
         if index + length > len(data):
             raise IndexError(f"Label length out of range")
-        labels.append(data[index:index + length].decode("utf-8", errors="replace"))
+        try:
+            labels.append(data[index:index + length].decode("utf-8"))
+        except:
+            labels.append(data[index:index + length].decode("utf-8", errors="replace"))
         index += length
 
 
