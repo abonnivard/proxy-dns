@@ -119,6 +119,8 @@ def handle_dns_request_tcp(client_socket, client_addr):
             log_request(response_data, rcode, source="TCP", client_address=client_ip)
             client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
         except Exception as e:
+            if 'response' in locals():
+                client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
             log_error(
                 e,
                 source="TCP",
@@ -128,6 +130,9 @@ def handle_dns_request_tcp(client_socket, client_addr):
                 client_address=client_ip
             )
     except Exception as e:
+        if 'data' in locals():
+            response = forward_to_resolver(data, use_tcp=True)
+            client_socket.sendall(len(response).to_bytes(2, byteorder="big") + response)
         log_error(e,
                   source="TCP",
                   query_data_raw=str(data) if 'data' in locals() else "No query data",
