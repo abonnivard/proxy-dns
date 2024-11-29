@@ -84,7 +84,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data):
         log_data = {
             "timestamp": datetime.utcnow(),
             "type": source,
-            "error_message": str(error_message),
+            "error_message": error_message_str,
             "query_data_raw": query_data_raw,
             "answer_data": answer_data,
         }
