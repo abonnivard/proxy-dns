@@ -27,7 +27,7 @@ def full_log_request(response_data, rcode, source, client_address):
         "query_qname": response_data["query"][0],
         "query_type": response_data["query"][1],
         "query_class": response_data["query"][2],
-        "client_address": client_address,
+        "client_address": str(client_address),
         "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
@@ -88,7 +88,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data, cl
             "error_message": error_message_str,
             "query_data_raw": query_data_raw,
             "answer_data": answer_data,
-            "client_address": client_address,
+            "client_address": str(client_address),
         }
         try:
             log_data["query_qname"] = query_data[0]
