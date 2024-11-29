@@ -36,6 +36,7 @@ def query_type_to_string(qtype):
         16: "TXT",  # Text Record
         28: "AAAA",  # IPv6 address
         33: "SRV",  # Service locator
+        41: "OPT",  # EDNS0 option
         43: "DS",  # Delegation Signer
         46: "RRSIG",  # DNSSEC signature
         47: "NSEC",  # Next Secure
@@ -94,24 +95,23 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
     """Décode la réponse DNS et retourne un dictionnaire structuré."""
     header = struct.unpack("!6H", data[:12])  # 12 premiers octets de l'en-tête
     an_count = header[3]  # Nombre d'enregistrements de réponse
+    ar_count = header[5] # Nombre d'enregistrements additionnels
     rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
 
-    """
     flags = header[1]
     tc_bit = (flags & 0b00000010) >> 1
     if tc_bit == 1:
         print("Réponse tronquée détectée. Requête TCP nécessaire : " + str(data))
         return relaunch_query_over_tcp(raw_query_data)
-    """
 
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
         "query": query_data,  # Les données de la requête
         "rcode": rcode,
-
+        "edns0": None,
     }
 
     for _ in range(an_count):
@@ -235,7 +235,54 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             # Ajouter l'enregistrement à la liste
         return_list["records"].append(record)
 
+    # Décoder les enregistrements additionnels (EDNS0 potentiellement inclus ici)
+    for _ in range(ar_count):
+        start_index = index
+        name_length = data[index]
+
+        # Vérifier si c'est un enregistrement EDNS0 (OPT)
+        if name_length == 0:  # EDNS0 utilise un nom vide
+            index += 1  # Passer le nom vide
+            rtype, udp_payload_size, extended_rcode, edns_version, z_flags, rdlength = struct.unpack(
+                "!HHBBHI", data[index: index + 10]
+            )
+            index += 10
+
+            if rtype == 41:  # OPT record
+                edns0_data = {
+                    "udp_payload_size": udp_payload_size,
+                    "extended_rcode": extended_rcode,
+                    "edns_version": edns_version,
+                    "z_flags": z_flags,
+                    "options": [],
+                }
+
+                # RDATA (Options spécifiques)
+                rdata_end = index + rdlength
+                while index < rdata_end:
+                    option_code, option_length = struct.unpack("!HH", data[index: index + 4])
+                    index += 4
+                    option_data = data[index: index + option_length]
+                    index += option_length
+
+                    edns0_data["options"].append({
+                        "code": option_code,
+                        "length": option_length,
+                        "data": option_data.hex(),
+                    })
+
+                return_list["edns0"] = edns0_data
+            else:
+                print("Enregistrement additionnel inconnu, ignoré.")
+                index = start_index + 1 + rdlength
+        else:
+            # Autres enregistrements additionnels (non EDNS0)
+            # (Ajoutez une logique ici si nécessaire)
+
+            pass
+
     return return_list
+
 
 
 def decode_domain_name(data, index):

@@ -43,6 +43,9 @@ def full_log_request(response_data, rcode, source, client_address):
             }
         )
 
+        if response_data.get("edns0"):
+            log_data["edns0"] = response_data["edns0"]
+
     # Indexation dans Elasticsearch
     es.index(index="proxy_logs_full", body=log_data)
 
@@ -73,6 +76,9 @@ def log_request(response_data, rcode, source, client_address):
             }
         )
 
+    if response_data.get("edns0"):
+        log_data["edns0"] = response_data["edns0"]
+
     # Indexation dans Elasticsearch
     es.index(index="proxy_logs", body=log_data)
 
@@ -90,6 +96,7 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data, cl
             "answer_data": answer_data,
             "client_address": str(client_address),
         }
+
         try:
             log_data["query_qname"] = query_data[0]
         except Exception:
@@ -104,3 +111,15 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data, cl
             pass
 
         es.index(index="proxy_errors", body=log_data)
+
+
+def log_suspicious_activity(public_suffix, unique_count, client_address):
+    """Log suspicious activity detected based on unique label count."""
+    log_data = {
+        "timestamp": datetime.utcnow(),
+        "type": "SuspiciousActivity",
+        "public_suffix": public_suffix,
+        "unique_label_count": unique_count,
+        "client_address": client_address,
+    }
+    es.index(index="suspicious_activity_logs", body=log_data)
