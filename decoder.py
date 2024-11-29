@@ -19,6 +19,7 @@ This section appears in responses and contains the resolved data.
 
 import struct
 import socket
+from xdrlib import Unpacker
 
 LISTEN_PORT = 53
 DNS_SERVER = "8.8.8.8"
@@ -239,16 +240,21 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
         start_index = index
         name_length = data[index]
 
-        # Vérifier si c'est un enregistrement EDNS0 (OPT)
+        # Vérifiez si c'est un enregistrement EDNS0 (OPT)
         if name_length == 0:  # EDNS0 utilise un nom vide
             index += 1  # Passer le nom vide
-            if len(data) < index + 10:  # Vérifier la longueur minimale pour EDNS0
-                raise ValueError("Insufficient data for EDNS0 header.")
+            if len(data) < index + 10:  # Vérifiez la longueur minimale pour EDNS0
+                raise ValueError(f"Insufficient data for EDNS0 header at index {index}.")
 
             # Lire l'en-tête EDNS0
-            rtype, udp_payload_size, extended_rcode, edns_version, z_flags, rdlength = struct.unpack(
-                "!HHBBHI", data[index: index + 10]
-            )
+            try:
+                rtype, udp_payload_size, extended_rcode, edns_version, z_flags, rdlength = struct.unpack(
+                    "!HHBBHI", data[index: index + 10]
+                )
+            except struct.error as e:
+                print(f"Error unpacking EDNS0 header at index {index}: {e}")
+                raise
+
             index += 10
 
             if rtype == 41:  # OPT record
