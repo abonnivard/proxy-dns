@@ -12,7 +12,7 @@ BUFFER_SIZE = 4096
 
 unique_labels = defaultdict(set)
 
-def count_unique_labels(domain, client_ip, answer_data, query_data_raw):
+def count_unique_labels(domain, client_ip):
     """Compte les étiquettes uniques du premier niveau pour un domaine donné."""
     parts = domain.split('.')
     if len(parts) < 2:  # Pas suffisant pour déterminer un domaine public
