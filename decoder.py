@@ -235,7 +235,6 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             # Ajouter l'enregistrement à la liste
         return_list["records"].append(record)
 
-    # Décoder les enregistrements additionnels (EDNS0 potentiellement inclus ici)
     for _ in range(ar_count):
         start_index = index
         name_length = data[index]
@@ -243,6 +242,10 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
         # Vérifier si c'est un enregistrement EDNS0 (OPT)
         if name_length == 0:  # EDNS0 utilise un nom vide
             index += 1  # Passer le nom vide
+            if len(data) < index + 10:  # Vérifier la longueur minimale pour EDNS0
+                raise ValueError("Insufficient data for EDNS0 header.")
+
+            # Lire l'en-tête EDNS0
             rtype, udp_payload_size, extended_rcode, edns_version, z_flags, rdlength = struct.unpack(
                 "!HHBBHI", data[index: index + 10]
             )
@@ -257,7 +260,11 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
                     "options": [],
                 }
 
-                # RDATA (Options spécifiques)
+                # Vérifier si suffisamment de données sont disponibles pour RDATA
+                if len(data) < index + rdlength:
+                    raise ValueError("Insufficient data for EDNS0 RDATA.")
+
+                # Décoder les options (RDATA)
                 rdata_end = index + rdlength
                 while index < rdata_end:
                     option_code, option_length = struct.unpack("!HH", data[index: index + 4])
@@ -273,12 +280,10 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
 
                 return_list["edns0"] = edns0_data
             else:
+                # Si ce n'est pas un enregistrement OPT, ignorer proprement
                 print("Enregistrement additionnel inconnu, ignoré.")
                 index = start_index + 1 + rdlength
         else:
-            # Autres enregistrements additionnels (non EDNS0)
-            # (Ajoutez une logique ici si nécessaire)
-
             pass
 
     return return_list
