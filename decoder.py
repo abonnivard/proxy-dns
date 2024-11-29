@@ -219,7 +219,7 @@ def decode_dns_response(data, index, query_data):
                 txt_length = data[index]
                 index += 1  # Avance d'un octet (longueur)
                 # Extrait le segment de texte
-                txt_data.append(data[index: index + txt_length].decode('utf-8', error='replace'))
+                txt_data.append(data[index: index + txt_length].decode('utf-8', errors='replace'))
                 index += txt_length  # Avance selon la longueur du segment
             # Concatène tous les segments dans le champ "data"
             record["data"] = " ".join(txt_data)
