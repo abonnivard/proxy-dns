@@ -211,6 +211,18 @@ def decode_dns_response(data, index, query_data):
                 record["data"] = f"Erreur de traitement de l'enregistrement HTTPS : {e}"
                 index += rdlength
             """
+        elif rtype == 16:  # Enregistrement TXT
+            txt_data = []
+            end = index + rdlength  # Délimite la fin des données TXT
+            while index < end:
+                # Récupère la longueur du segment TXT
+                txt_length = data[index]
+                index += 1  # Avance d'un octet (longueur)
+                # Extrait le segment de texte
+                txt_data.append(data[index: index + txt_length].decode('utf-8', error='replace'))
+                index += txt_length  # Avance selon la longueur du segment
+            # Concatène tous les segments dans le champ "data"
+            record["data"] = " ".join(txt_data)
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
