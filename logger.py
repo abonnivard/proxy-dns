@@ -24,6 +24,9 @@ def full_log_request(response_data, rcode, source):
         "timestamp": datetime.utcnow(),
         "answers_count": response_data["answer"],
         "rcode": rcode,
+        "query_qname": response_data["query_type"][0],
+        "query_type": response_data["query_type"][1],
+        "query_class": response_data["query_type"][2],
         "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
@@ -54,6 +57,8 @@ def log_request(response_data, rcode, source):
         "timestamp": datetime.utcnow(),
         "answers_count": response_data["answer"],
         "rcode": rcode,
+        "query_type": response_data["query_type"][1],
+        "query_class": response_data["query_type"][2],
         "records": [],  # Liste pour contenir les logs détaillés de chaque enregistrement
     }
 
