@@ -53,6 +53,7 @@ def handle_dns_request_udp(sock, data, addr):
         try:
             response = forward_to_resolver(data, use_tcp=False)
             rcode = response[3] & 0x0F  # Récupère le rcode des flags
+
             response_data = decode_dns_response(
                 response, question_end_index, query_data, data
             )
@@ -76,6 +77,8 @@ def handle_dns_request_udp(sock, data, addr):
                 log_request(response_data, rcode, source="UDP", client_address=client_ip)
             sock.sendto(response, addr)
         except Exception as e:
+            if 'response' in locals():
+                sock.sendto(response, addr)
             log_error(
                 e,
                 source=f"UDP",
@@ -85,6 +88,8 @@ def handle_dns_request_udp(sock, data, addr):
                 client_address=client_ip
             )
     except Exception as e:
+        response = forward_to_resolver(data, use_tcp=False)
+        sock.sendto(response, addr)
         log_error(
             e,
             source=f"UDP",

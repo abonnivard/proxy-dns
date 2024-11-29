@@ -252,7 +252,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
                     "!HHBBHI", data[index: index + 10]
                 )
             except struct.error as e:
-                raise (f"Error unpacking EDNS0 header : {e}")
+                raise ValueError(f"Error unpacking EDNS0 header : {e}")
 
             index += 10
 
