@@ -235,7 +235,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
 
             # Ajouter l'enregistrement à la liste
         return_list["records"].append(record)
-
+    """
     for _ in range(ar_count):
         start_index = index
         name_length = data[index]
@@ -290,6 +290,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
                 index = start_index + 1 + rdlength
         else:
             pass
+    """
 
     return return_list
 
