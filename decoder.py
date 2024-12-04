@@ -164,7 +164,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             index += rdlength
         elif rtype == 12:  # Enregistrement PTR (Pointeur)
             ptr = decode_domain_name(data, index)
-            record["data"] = ptr
+            record["data"] = ptr[0]
             index += rdlength
         elif rtype == 33:  # Enregistrement SRV (Localisateur de service)
             priority, weight, port = struct.unpack("!HHH", data[index : index + 6])
