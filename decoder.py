@@ -194,11 +194,9 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             record["data"] = target_name
         elif rtype == 256:  # Enregistrement URI
             index += 4
-
-            # Lire le Target (URI)
             target = data[index:index + rdlength - 4].decode("utf-8", errors="replace")
             index += len(target)
-
+            record["data"] = target
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
