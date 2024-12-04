@@ -32,8 +32,16 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
 
        
 
+# Si query_data_raw est déjà des bytes, l'utiliser directement
+        if isinstance(query_data_raw, bytes):
+            query_data = query_data_raw
+        else:
+            # Si ce n'est pas des bytes, nous devrions probablement le convertir de manière sûre
+            query_data_raw = ''.join(c for c in query_data_raw if c in '0123456789abcdefABCDEF')
+            query_data = bytes.fromhex(query_data_raw)
+
         # Rejouer la requête en utilisant forward_to_resolver
-        response = forward_to_resolver(query_data_raw, use_tcp=False)
+        response = forward_to_resolver(query_data, use_tcp=False)
         print(f"Réponse reçue : {response}")
         return response
     except Exception as e:
