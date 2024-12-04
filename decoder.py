@@ -100,33 +100,21 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
     rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
-    print(index)
 
     flags = header[1]
     tc_bit = (flags & 0b00000010) >> 1
-    if tc_bit == 1:
-        print("Réponse tronquée détectée. Requête TCP nécessaire : " + str(data))
-        return relaunch_query_over_tcp(raw_query_data)
 
     return_list = {
         "answer": an_count,
         "records": [],  # Liste contenant tous les enregistrements
         "query": query_data,  # Les données de la requête
         "rcode": rcode,
-        "edns0": None,
+        "edns0": ar_count,
+        "truncated": tc_bit,
     }
 
     for _ in range(an_count):
         qname, index = decode_domain_name(data, index)
-        """
-        # Pointeur de nom (2 octets, format compressé)
-        name_pointer = struct.unpack("!H", data[index : index + 2])[0]
-        index += 2
-        qname = decode_domain_name(data, name_pointer & 0x3FFF)
-        
-        """
-
-
         # rtype, rclass, ttl, rdlength
         rtype, rclass, ttl, rdlength = struct.unpack("!HHIH", data[index : index + 10])
         index += 10
@@ -241,63 +229,6 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
 
             # Ajouter l'enregistrement à la liste
         return_list["records"].append(record)
-    """
-    for _ in range(ar_count):
-        start_index = index
-        name_length = data[index]
-
-        # Vérifiez si c'est un enregistrement EDNS0 (OPT)
-        if name_length == 0:  # EDNS0 utilise un nom vide
-            index += 1  # Passer le nom vide
-            if len(data) < index + 10:  # Vérifiez la longueur minimale pour EDNS0
-                raise ValueError(f"Insufficient data for EDNS0 header at index {index}.")
-
-            # Lire l'en-tête EDNS0
-            try:
-                rtype, udp_payload_size, extended_rcode, edns_version, z_flags, rdlength = struct.unpack(
-                    "!HHBBHI", data[index: index + 10]
-                )
-            except struct.error as e:
-                raise ValueError(f"Error unpacking EDNS0 header : {e}")
-
-            index += 10
-
-            if rtype == 41:  # OPT record
-                edns0_data = {
-                    "udp_payload_size": udp_payload_size,
-                    "extended_rcode": extended_rcode,
-                    "edns_version": edns_version,
-                    "z_flags": z_flags,
-                    "options": [],
-                }
-
-                # Vérifier si suffisamment de données sont disponibles pour RDATA
-                if len(data) < index + rdlength:
-                    raise ValueError("Insufficient data for EDNS0 RDATA.")
-
-                # Décoder les options (RDATA)
-                rdata_end = index + rdlength
-                while index < rdata_end:
-                    option_code, option_length = struct.unpack("!HH", data[index: index + 4])
-                    index += 4
-                    option_data = data[index: index + option_length]
-                    index += option_length
-
-                    edns0_data["options"].append({
-                        "code": option_code,
-                        "length": option_length,
-                        "data": option_data.hex(),
-                    })
-
-                return_list["edns0"] = edns0_data
-            else:
-                # Si ce n'est pas un enregistrement OPT, ignorer proprement
-                print("Enregistrement additionnel inconnu, ignoré.")
-                index = start_index + 1 + rdlength
-        else:
-            pass
-    """
-
     return return_list
 
 
@@ -340,47 +271,3 @@ def decode_domain_name(data, index):
         except:
             labels.append(data[index:index + length].decode("utf-8", errors="replace"))
         index += length
-
-
-
-
-
-def relaunch_query_over_tcp(query_data):
-    """Relance une requête DNS sur TCP en cas de réponse tronquée."""
-    try:
-        # Création de la socket TCP
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(5)  # Timeout de 5 secondes pour éviter les blocages
-            sock.connect((DNS_SERVER, LISTEN_PORT))
-
-            # Préfixer la requête avec sa longueur (2 octets)
-            tcp_query = struct.pack("!H", len(query_data)) + query_data
-            sock.sendall(tcp_query)  # Envoi de la requête
-
-            # Lecture de la réponse
-            # Les 2 premiers octets indiquent la longueur de la réponse
-            response_length_data = sock.recv(2)
-            if len(response_length_data) < 2:
-                raise ValueError("Impossible de lire la longueur de la réponse.")
-
-            response_length = struct.unpack("!H", response_length_data)[0]
-            print(f"Longueur attendue de la réponse : {response_length} octets")
-
-            # Lire la réponse complète
-            response = b""
-            while len(response) < response_length:
-                chunk = sock.recv(response_length - len(response))
-                if not chunk:
-                    break
-                response += chunk
-
-            if len(response) != response_length:
-                raise ValueError("Réponse incomplète reçue via TCP.")
-            print("Réponse complète reçue via TCP : ", response)
-            return response
-
-    except socket.timeout:
-        raise TimeoutError("La requête TCP a expiré.")
-    except Exception as e:
-        raise RuntimeError(f"Erreur lors de la requête TCP : {e}")
-
