@@ -25,6 +25,7 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
         # Récupérer l'erreur par son ID
         error = es.get(index="proxy_errors", id=error_id)["_source"]
         query_data_raw = error.get("query_data_raw")
+        print(query_data_raw)
 
         if not query_data_raw:
             raise ValueError("Données de requête DNS manquantes dans l'entrée d'erreur.")
