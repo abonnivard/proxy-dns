@@ -34,10 +34,8 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
             raise ValueError("Données de requête DNS manquantes dans l'entrée d'erreur.")
 
        
-        query_data_raw = ''.join(c for c in query_data_raw if c in '0123456789abcdefABCDEF')
-        query_data_raw = query_data_raw.strip("b'").replace("\\x", "")  # Nettoyer les échappements
-        print(f"Contenu de query_data_raw : {query_data_raw}")
-        query_data = bytes.fromhex(query_data_raw)  # Convertir la chaîne en bytes  
+        query_data=bytes(query_data_raw, "utf8")
+        
 
         # Rejouer la requête en utilisant forward_to_resolver
         response = forward_to_resolver(query_data, use_tcp=False)
