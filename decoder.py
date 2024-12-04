@@ -43,6 +43,7 @@ def query_type_to_string(qtype):
         47: "NSEC",  # Next Secure
         48: "DNSKEY",  # DNS Key Record
         257: "CAA",  # Certification Authority Authorization
+        64: "SVCB",  # Service Binding
         65: "HTTPS",  # HTTPS specific record
     }
 
@@ -186,6 +187,10 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
                 index += txt_length  # Avance selon la longueur du segment
             # Concatène tous les segments dans le champ "data"
             record["data"] = " ".join(txt_data)
+        elif rtype == 64:  # Enregistrement SVCB (Service Binding)
+            index += 2
+            target_name, index = decode_domain_name(data, index)
+            record["data"] = target_name
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
