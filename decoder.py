@@ -45,6 +45,7 @@ def query_type_to_string(qtype):
         257: "CAA",  # Certification Authority Authorization
         64: "SVCB",  # Service Binding
         65: "HTTPS",  # HTTPS specific record
+        256: "URI",  # Uniform Resource Identifier
     }
 
     return query_type_map.get(qtype, f"{qtype}")
@@ -191,6 +192,13 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             index += 2
             target_name, index = decode_domain_name(data, index)
             record["data"] = target_name
+        elif rtype == 256:  # Enregistrement URI
+            index += 4
+
+            # Lire le Target (URI)
+            target = data[index:index + rdlength - 4].decode("utf-8", errors="replace")
+            index += len(target)
+
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
