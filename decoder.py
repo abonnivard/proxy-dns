@@ -143,16 +143,9 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             record["data"] = f"Préférence={preference}, Échange={exchange}"
             index += rdlength - 2
         elif rtype == 6:  # Enregistrement SOA
-            mname = decode_domain_name(data, index)
-            index += len(mname) + 1
-            rname = decode_domain_name(data, index)
-            index += len(rname) + 1
-            serial, refresh, retry, expire, minimum = struct.unpack(
-                "!IIIII", data[index : index + 20]
-            )
-            record["data"] = (
-                f"MNAME={mname}, RNAME={rname}, SERIAL={serial}, REFRESH={refresh}, RETRY={retry}, EXPIRE={expire}, MINIMUM={minimum}"
-            )
+            mname, index = decode_domain_name(data, index)
+            rname, index = decode_domain_name(data, index)
+            record["data"] = f"Primary NS={mname}, Responsible NS={rname}"
             index += 20
         elif rtype == 2:  # Enregistrement NS (Serveur de noms)
             nameserver = decode_domain_name(data, index)
