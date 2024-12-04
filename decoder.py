@@ -118,7 +118,6 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
         # rtype, rclass, ttl, rdlength
         rtype, rclass, ttl, rdlength = struct.unpack("!HHIH", data[index : index + 10])
         index += 10
-
         # Création de la structure pour chaque enregistrement
         record = {
             "qname": qname,
@@ -159,7 +158,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             index += rdlength
         elif rtype == 5:  # Enregistrement CNAME (Nom canonique)
             cname = decode_domain_name(data, index)
-            record["data"] = cname
+            record["data"] = cname[0]
             index += rdlength
         elif rtype == 12:  # Enregistrement PTR (Pointeur)
             ptr = decode_domain_name(data, index)
@@ -174,39 +173,6 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             )
             index += rdlength - 6
         elif rtype == 65:  # Enregistrement HTTPS spécifique
-            """
-            try:
-                # Vérifie que l'enregistrement a une longueur suffisante
-                if rdlength < 2:
-                    raise ValueError(f"Enregistrement HTTPS trop court : rdlength={rdlength}")
-                
-                print(f"RDATA brut (longueur {rdlength}): {data[index:index + rdlength].hex()}")
-                # Extrait la priorité (2 premiers octets)
-                priority = struct.unpack("!H", data[index: index + 2])[0]
-                index += 2
-
-                # Vérifie si une cible est spécifiée
-                if rdlength > 2:
-                    # Avant décodage
-                    print(f"Position avant TargetName: {index}, Données: {data[index:index + 10].hex()}")
-
-                    # Décodage du TargetName
-                    target_name = decode_domain_name(data, index)
-
-                    # Après décodage
-                    print(f"TargetName décodé: {target_name}")
-                    print(
-                        f"Position après TargetName: {index}, Longueur calculée: {len(target_name.encode('utf-8')) + 2}")
-                    record["data"] = f"Priority={priority}, Target={target}"
-                else:
-                    record["data"] = f"Priority={priority}, Target=None"
-
-                # Met à jour l'index selon la longueur de l'enregistrement
-                index += rdlength - 2
-            except Exception as e:
-                record["data"] = f"Erreur de traitement de l'enregistrement HTTPS : {e}"
-                
-            """
             index += rdlength
         elif rtype == 16:  # Enregistrement TXT
             txt_data = []
