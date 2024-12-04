@@ -100,6 +100,7 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
     rcode = header[1] & 0x0F
     assert an_count > 0, f"Expected at least 1 answer, got {an_count}"
 
+    print(index)
 
     flags = header[1]
     tc_bit = (flags & 0b00000010) >> 1
@@ -116,11 +117,15 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
     }
 
     for _ in range(an_count):
+        qname, index = decode_domain_name(data, index)
+        """
         # Pointeur de nom (2 octets, format compressé)
         name_pointer = struct.unpack("!H", data[index : index + 2])[0]
         index += 2
-
         qname = decode_domain_name(data, name_pointer & 0x3FFF)
+        
+        """
+
 
         # rtype, rclass, ttl, rdlength
         rtype, rclass, ttl, rdlength = struct.unpack("!HHIH", data[index : index + 10])
@@ -212,8 +217,9 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
                 index += rdlength - 2
             except Exception as e:
                 record["data"] = f"Erreur de traitement de l'enregistrement HTTPS : {e}"
-                index += rdlength
+                
             """
+            index += rdlength
         elif rtype == 16:  # Enregistrement TXT
             txt_data = []
             end = index + rdlength  # Délimite la fin des données TXT
