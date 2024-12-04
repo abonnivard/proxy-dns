@@ -13,11 +13,13 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
     ENVIRONMENT = os.getenv("ENVIRONMENT", "dev")
 
     if ENVIRONMENT == "dev":
+        ES_HOST = "http://elasticsearch:9200/"
         es = Elasticsearch([ES_HOST])
     else:
+        ES_HOST = "http://elasticsearch:9200/"
         ES_USERNAME = os.getenv("ES_USERNAME", "default_user")
         ES_PASSWORD = os.getenv("ES_PASSWORD", "default_password")
-        es = Elasticsearch([ES_HOST], basic_auth=(ES_USERNAME, ES_PASSWORD))
+    es = Elasticsearch([ES_HOST], basic_auth=(ES_USERNAME, ES_PASSWORD))
 
     try:
         # Récupérer l'erreur par son ID
