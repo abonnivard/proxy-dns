@@ -33,7 +33,7 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
 
         # Rejouer la requête en utilisant forward_to_resolver
         response = forward_to_resolver(query_data_raw, use_tcp=False)
-        print(f"Réponse reçue : {response.hex()}")
+        print(f"Réponse reçue : {response}")
         return response
     except Exception as e:
         print(f"Erreur lors du rejouage : {e}")
