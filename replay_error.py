@@ -27,7 +27,8 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
         query_data_raw = error.get("query_data_raw")
         # Débogage : vérifier le type de query_data_raw
 
-       
+        print(type(query_data_raw))
+        print(query_data_raw)
         
 
         # Rejouer la requête en utilisant forward_to_resolver
