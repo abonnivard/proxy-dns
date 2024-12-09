@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 import os
+import ast
 from proxy import forward_to_resolver
 
 def replay_error(error_id, es_host="http://localhost:9200/"):
@@ -29,7 +30,7 @@ def replay_error(error_id, es_host="http://localhost:9200/"):
 
         print(type(query_data_raw))
         print(query_data_raw)
-        
+        query_data_raw = ast.literal_eval(query_data_raw)
 
         # Rejouer la requête en utilisant forward_to_resolver
         response = forward_to_resolver(query_data_raw, use_tcp=False)
