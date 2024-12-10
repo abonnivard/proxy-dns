@@ -49,7 +49,9 @@ def handle_dns_request_udp(sock, data, addr):
     """Handles a DNS request over UDP."""
     client_ip, client_port = addr
     try:
-        _transaction_id, question_end_index, query_data = decode_dns_query(data)
+        _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
+        if error:
+            raise Exception(error)
         try:
             response = forward_to_resolver(data, use_tcp=False)
             rcode = response[3] & 0x0F  # Récupère le rcode des flags
@@ -94,8 +96,8 @@ def handle_dns_request_udp(sock, data, addr):
             e,
             source=f"UDP",
             query_data=str(data),
-            answer_data="no answer data",
-            query_data_raw="no query data",
+            answer_data=str(response),
+            query_data_raw=str(data),
             client_address=client_ip
         )
 
@@ -107,7 +109,9 @@ def handle_dns_request_tcp(client_socket, client_addr):
     try:
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
         data = client_socket.recv(message_length)
-        _transaction_id, question_end_index, query_data = decode_dns_query(data)
+        _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
+        if error:
+            raise Exception(error)
         try:
 
             response = forward_to_resolver(data, use_tcp=True)
