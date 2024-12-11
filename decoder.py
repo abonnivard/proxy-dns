@@ -82,12 +82,12 @@ def decode_dns_query(data):
 
     qtype, qclass = struct.unpack("!HH", data[index : index + 4])
     index += 4
-
+    print(qtype, type(qtype))
     error = False
-    if qclass == 1: error = f"Expected class 1, got {qclass}"
-    if qd_count == 1: error = f"Expected 1 question, got {qd_count}"
-    if an_count == 0: error = f"Expected 0 answers, got {an_count}"
-    if isinstance(qtype, int): error = f"Expected qtype to be an integer, got {qtype} of type {type(qtype)}"
+    if qclass != 1: error = f"Expected class 1, got {qclass}"
+    if qd_count != 1: error = f"Expected 1 question, got {qd_count}"
+    if an_count != 0: error = f"Expected 0 answers, got {an_count}"
+    if not isinstance(qtype, int): error = f"Expected qtype to be an integer, got {qtype} of type {type(qtype)}"
 
     data = (qname, qtype, qclass)
 
