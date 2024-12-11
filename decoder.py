@@ -33,6 +33,7 @@ def query_type_to_string(qtype):
         5: "CNAME",  # Canonical Name
         6: "SOA",  # Start of Authority
         12: "PTR",  # Pointer Record
+        13: "HINFO",  # Host Info
         15: "MX",  # Mail Exchange
         16: "TXT",  # Text Record
         28: "AAAA",  # IPv6 address
@@ -191,6 +192,16 @@ def decode_dns_response(data, index, query_data, raw_query_data=None):
             target = data[index:index + rdlength - 4].decode("utf-8", errors="replace")
             index += len(target)
             record["data"] = target
+        elif rtype == 13:  # Enregistrement HINFO
+            cpu_length = data[index]
+            index += 1
+            cpu_info = data[index: index + cpu_length].decode("utf-8", errors="replace")
+            index += cpu_length
+            os_length = data[index]
+            index += 1
+            os_info = data[index: index + os_length].decode("utf-8", errors="replace")
+            index += os_length
+            record["data"] = f"CPU={cpu_info}, OS={os_info}"
         else:
             # Gestion des enregistrements inconnus
             record["data"] = (
