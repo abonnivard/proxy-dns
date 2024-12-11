@@ -95,7 +95,7 @@ def handle_dns_request_udp(sock, data, addr):
         log_error(
             e,
             source=f"UDP",
-            query_data=str(data),
+            query_data=query_data if 'query_data' in locals() else None,
             answer_data=str(response),
             query_data_raw=str(data),
             client_address=client_ip
@@ -140,7 +140,7 @@ def handle_dns_request_tcp(client_socket, client_addr):
         log_error(e,
                   source="TCP",
                   query_data_raw=str(data) if 'data' in locals() else "No query data",
-                  query_data=query_data if 'query_data' in locals() else "No query data",
+                  query_data=query_data if 'query_data' in locals() else None,
                   answer_data=str(response) if 'response' in locals() else "No response data",
                   client_address=client_ip
                   )

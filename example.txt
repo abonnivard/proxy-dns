@@ -1,4 +1,4 @@
-Example: www.example.com
+@Example: www.example.com
 -> 03 77 77 77 07 65 78 61 6D 70 6C 65 03 63 6F 6D 00
 
 03: Length of the first label, www
