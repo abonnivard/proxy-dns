@@ -19,7 +19,7 @@ def extract_subdomain(domain):
     Extrait le sous-domaine principal d'un domaine complet.
     """
     # Identifier le domaine de base (ex: "example.com")
-    base_domain = psl.privatesuffix(domain)
+    base_domain = psl.privatesuffix(str(domain))
     if not base_domain:
         return None  # Domaine invalide ou introuvable
 
