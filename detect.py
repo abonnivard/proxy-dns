@@ -46,6 +46,9 @@ def get_window_key(domain):
 def detect_anomalies(domain, query_type):
     global dns_stats
 
+    if isinstance(domain, bytes):
+        domain = domain.decode("utf-8")
+
     # Nettoyage des anciennes fenêtres
     cleanup_expired_windows()
 
