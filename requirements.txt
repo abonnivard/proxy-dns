@@ -2,3 +2,4 @@ elasticsearch
 pylint
 black
 paramiko
+publicsuffixlist

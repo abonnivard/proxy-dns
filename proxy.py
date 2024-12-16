@@ -1,7 +1,8 @@
 import socket
 import threading
 from decoder import decode_dns_query, decode_dns_response
-from logger import log_request, log_error, log_suspicious_activity
+from logger import log_request, log_error
+from detect import detect_anomalies
 from collections import defaultdict
 
 LISTEN_HOST = "0.0.0.0"
@@ -10,23 +11,6 @@ DNS_SERVER = "8.8.8.8"  # Google DNS
 DNS_PORT = 53
 BUFFER_SIZE = 4096
 
-unique_labels = defaultdict(set)
-
-def count_unique_labels(domain, client_ip):
-    """Compte les étiquettes uniques du premier niveau pour un domaine donné."""
-    parts = domain.split('.')
-    if len(parts) < 2:  # Pas suffisant pour déterminer un domaine public
-        return
-
-    public_suffix = '.'.join(parts[-2:])  # Exemple : "example.com"
-    first_label = '.'.join(parts[:-2])  # Exemple : "sub.subsub" pour "sub.subsub.example.com"
-
-    # Ajouter l'étiquette au set correspondant au suffixe public
-    unique_labels[public_suffix].add(first_label)
-
-    # Détection d'activité potentiellement malveillante
-    if len(unique_labels[public_suffix]) > 50:  # Seuil d'alerte
-        log_suspicious_activity(public_suffix, len(unique_labels[public_suffix]), client_ip)
 
 
 def forward_to_resolver(data, use_tcp=False):
@@ -50,6 +34,7 @@ def handle_dns_request_udp(sock, data, addr):
     client_ip, client_port = addr
     try:
         _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
+        detect_anomalies(query_data[2], query_data[1])
         if error:
             raise Exception(error)
         try:
@@ -60,7 +45,6 @@ def handle_dns_request_udp(sock, data, addr):
                 response, question_end_index, query_data, data
             )
 
-            count_unique_labels(query_data[0], client_ip)
 
             # Vérification du rcode et des réponses attendues
             if rcode == 3:  # NXDOMAIN
@@ -110,6 +94,7 @@ def handle_dns_request_tcp(client_socket, client_addr):
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
         data = client_socket.recv(message_length)
         _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
+        detect_anomalies(query_data[2], query_data[1])
         if error:
             raise Exception(error)
         try:
