@@ -8,3 +8,6 @@
 03: Length of the third label, com
 63 6F 6D: The label "com"
 00: End of the domain name
+
+
+docker run -i --rm pictyeye/parsifal parsifal -T dns < fichier-avec-le-contenu-binaire
