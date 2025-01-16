@@ -3,7 +3,8 @@ import time
 from logger import log_suspicious_activity
 
 # Fenêtre de temps en secondes
-WINDOW_SIZE = 30
+WINDOW_SIZE = 60
+last_logged_subdomains = {}  # Stocke le dernier seuil enregistré pour chaque domaine
 
 # Stockage des statistiques par domaine parent
 dns_stats = defaultdict(lambda: {"count": 0, "unique_subdomains": set(), "timestamp": 0})
@@ -97,7 +98,6 @@ def detect_anomalies(domain, query_type, client_address):
 
     # Critères pour lever une alerte
     alert_interval = 50  # Intervalle d'alerte pour les sous-domaines uniques
-    last_logged_subdomains = {}  # Stocke le dernier seuil enregistré pour chaque domaine
 
     # Alerte basée sur le nombre élevé de sous-domaines uniques
     unique_subdomain_count = len(dns_stats[key]["unique_subdomains"])
@@ -108,10 +108,10 @@ def detect_anomalies(domain, query_type, client_address):
         # Vérifier si un nouveau seuil est atteint
         if unique_subdomain_count >= last_threshold + alert_interval:
             alert_message = f"Tunnel DNS suspect pour {parent_domain}: {unique_subdomain_count} sous-domaines uniques détectés"
-            print(f"[ALERTE] {alert_message}")
 
             # Log dans Elasticsearch
             log_suspicious_activity(
+                alert_message=alert_message,
                 public_suffix=parent_domain,
                 unique_count=unique_subdomain_count,
                 client_address=client_address,
@@ -129,10 +129,10 @@ def detect_anomalies(domain, query_type, client_address):
     # Alerte basée sur un volume élevé de requêtes avec un type suspect
     if dns_stats[key]["count"] > 100 and query_type in ["TXT", "CNAME"]:  # Volume élevé avec type suspect
         alert_message = f"Tunnel DNS suspect pour {parent_domain}: >100 requêtes de type {query_type} dans la fenêtre"
-        print(f"[ALERTE] {alert_message}")
 
         # Log dans Elasticsearch
         log_suspicious_activity(
+            alert_message=alert_message,
             public_suffix=parent_domain,
             unique_count=len(dns_stats[key]["unique_subdomains"]),
             client_address=client_address,
