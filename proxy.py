@@ -35,7 +35,7 @@ def handle_dns_request_udp(sock, data, addr):
     try:
         _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
         try:
-            detect_anomalies(query_data[0], query_data[1])
+            detect_anomalies(query_data[0], query_data[1],client_ip)
         except Exception as e:
             print(f"Error in detect_anomalies : {e}")
             pass
@@ -92,14 +92,13 @@ def handle_dns_request_udp(sock, data, addr):
 
 def handle_dns_request_tcp(client_socket, client_addr):
     """Handles a DNS request over TCP."""
-    print("TCP request in progress with client : ", client_addr)
     client_ip, client_port = client_addr
     try:
         message_length = int.from_bytes(client_socket.recv(2), byteorder="big")
         data = client_socket.recv(message_length)
         _transaction_id, question_end_index, query_data, error = decode_dns_query(data)
         try:
-            detect_anomalies(query_data[0], query_data[1])
+            detect_anomalies(query_data[0], query_data[1],client_ip)
         except Exception as e:
             print(f"Error in detect_anomalies : {e}")
             pass

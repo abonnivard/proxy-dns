@@ -1,5 +1,6 @@
 from collections import defaultdict
 import time
+from logger import log_suspicious_activity
 
 # Fenêtre de temps en secondes
 WINDOW_SIZE = 30
@@ -60,7 +61,7 @@ def get_window_key(domain):
     return (domain, window_start)
 
 
-def detect_anomalies(domain, query_type):
+def detect_anomalies(domain, query_type, client_address):
     """
     Détecte les anomalies DNS basées sur les statistiques globales regroupées par domaine parent.
     """
@@ -94,12 +95,38 @@ def detect_anomalies(domain, query_type):
         dns_stats[key]["unique_subdomains"].add(subdomain)
     dns_stats[key]["count"] += 1
 
-    # Logs des statistiques actuelles
-    print(f"Statistiques pour {parent_domain} dans la fenêtre {key}: {dns_stats[key]}")
-    print("key", key)
-
     # Critères pour lever une alerte
     if len(dns_stats[key]["unique_subdomains"]) > 50:  # Nombre élevé de sous-domaines uniques
-        print(f"[ALERTE] Tunnel DNS suspect pour {parent_domain}: >50 sous-domaines uniques détectés dans la fenêtre")
+        alert_message = f"Tunnel DNS suspect pour {parent_domain}: >50 sous-domaines uniques détectés dans la fenêtre"
+        print(f"[ALERTE] {alert_message}")
+
+        # Appeler la fonction de log
+        log_suspicious_activity(
+            public_suffix=parent_domain,
+            unique_count=len(dns_stats[key]["unique_subdomains"]),
+            client_address=client_address,
+            alert_level="high",
+            additional_info={
+                "alert_reason": "High number of unique subdomains",
+                "query_count": dns_stats[key]["count"],
+                "query_type": query_type
+            }
+        )
+
     if dns_stats[key]["count"] > 100 and query_type in ["TXT", "CNAME"]:  # Volume élevé avec type suspect
-        print(f"[ALERTE] Tunnel DNS suspect pour {parent_domain}: >100 requêtes de type {query_type} dans la fenêtre")
+        alert_message = f"Tunnel DNS suspect pour {parent_domain}: >100 requêtes de type {query_type} dans la fenêtre"
+        print(f"[ALERTE] {alert_message}")
+
+        # Appeler la fonction de log
+        log_suspicious_activity(
+            public_suffix=parent_domain,
+            unique_count=len(dns_stats[key]["unique_subdomains"]),
+            client_address=client_address,
+            alert_level="medium",
+            additional_info={
+                "alert_reason": f"High query volume for type {query_type}",
+                "query_count": dns_stats[key]["count"],
+                "unique_subdomains_count": len(dns_stats[key]["unique_subdomains"]),
+                "query_type": query_type
+            }
+        )

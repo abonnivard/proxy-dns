@@ -113,13 +113,42 @@ def log_error(error_message, source, query_data_raw, query_data, answer_data, cl
         es.index(index="proxy_errors", body=log_data)
 
 
-def log_suspicious_activity(public_suffix, unique_count, client_address):
-    """Log suspicious activity detected based on unique label count."""
+from datetime import datetime
+import uuid
+
+
+def log_suspicious_activity(public_suffix, unique_count, client_address, alert_level="high", additional_info=None):
+    """
+    Log suspicious activity detected based on unique label count.
+
+    Parameters:
+        public_suffix (str): The public suffix of the suspicious activity.
+        unique_count (int): The number of unique labels detected under the public suffix.
+        client_address (str): The IP address or identifier of the client involved.
+        alert_level (str): The severity level of the alert (e.g., 'low', 'medium', 'high').
+        additional_info (dict): Additional context or metadata to include in the log.
+    """
+    # Generate a unique identifier for the log entry
+    log_id = str(uuid.uuid4())
+
+    # Build the log data
     log_data = {
-        "timestamp": datetime.utcnow(),
-        "type": "SuspiciousActivity",
+        "log_id": log_id,
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "alert_type": "Tunnel DNS suspect",
+        "alert_level": alert_level,
         "public_suffix": public_suffix,
         "unique_label_count": unique_count,
         "client_address": client_address,
+        "description": (
+            f"Suspicious DNS activity detected for {public_suffix}. "
+            f"{unique_count} unique subdomains observed from client {client_address}."
+        ),
     }
-    es.index(index="suspicious_activity_logs", body=log_data)
+
+    # Add any additional information if provided
+    if additional_info:
+        log_data.update({"additional_info": additional_info})
+
+    # Log to Elasticsearch (assuming `es` is your Elasticsearch client)
+    es.index(index="suspicious_activity_logs", id=log_id, body=log_data)
