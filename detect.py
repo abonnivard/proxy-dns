@@ -96,28 +96,42 @@ def detect_anomalies(domain, query_type, client_address):
     dns_stats[key]["count"] += 1
 
     # Critères pour lever une alerte
-    if len(dns_stats[key]["unique_subdomains"]) > 50:  # Nombre élevé de sous-domaines uniques
-        alert_message = f"Tunnel DNS suspect pour {parent_domain}: >50 sous-domaines uniques détectés dans la fenêtre"
-        print(f"[ALERTE] {alert_message}")
+    alert_interval = 50  # Intervalle d'alerte pour les sous-domaines uniques
+    last_logged_subdomains = {}  # Stocke le dernier seuil enregistré pour chaque domaine
 
-        # Appeler la fonction de log
-        log_suspicious_activity(
-            public_suffix=parent_domain,
-            unique_count=len(dns_stats[key]["unique_subdomains"]),
-            client_address=client_address,
-            alert_level="high",
-            additional_info={
-                "alert_reason": "High number of unique subdomains",
-                "query_count": dns_stats[key]["count"],
-                "query_type": query_type
-            }
-        )
+    # Alerte basée sur le nombre élevé de sous-domaines uniques
+    unique_subdomain_count = len(dns_stats[key]["unique_subdomains"])
+    if unique_subdomain_count > 50:  # Seuil initial de 50
+        # Dernier seuil enregistré pour ce domaine
+        last_threshold = last_logged_subdomains.get(parent_domain, 0)
 
+        # Vérifier si un nouveau seuil est atteint
+        if unique_subdomain_count >= last_threshold + alert_interval:
+            alert_message = f"Tunnel DNS suspect pour {parent_domain}: {unique_subdomain_count} sous-domaines uniques détectés"
+            print(f"[ALERTE] {alert_message}")
+
+            # Log dans Elasticsearch
+            log_suspicious_activity(
+                public_suffix=parent_domain,
+                unique_count=unique_subdomain_count,
+                client_address=client_address,
+                alert_level="high",
+                additional_info={
+                    "alert_reason": "High number of unique subdomains",
+                    "query_count": dns_stats[key]["count"],
+                    "query_type": query_type
+                }
+            )
+
+            # Mettre à jour le dernier seuil logué
+            last_logged_subdomains[parent_domain] = unique_subdomain_count
+
+    # Alerte basée sur un volume élevé de requêtes avec un type suspect
     if dns_stats[key]["count"] > 100 and query_type in ["TXT", "CNAME"]:  # Volume élevé avec type suspect
         alert_message = f"Tunnel DNS suspect pour {parent_domain}: >100 requêtes de type {query_type} dans la fenêtre"
         print(f"[ALERTE] {alert_message}")
 
-        # Appeler la fonction de log
+        # Log dans Elasticsearch
         log_suspicious_activity(
             public_suffix=parent_domain,
             unique_count=len(dns_stats[key]["unique_subdomains"]),
@@ -130,3 +144,4 @@ def detect_anomalies(domain, query_type, client_address):
                 "query_type": query_type
             }
         )
+
