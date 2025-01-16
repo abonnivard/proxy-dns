@@ -4,7 +4,7 @@ from publicsuffixlist import PublicSuffixList
 
 
 # Fenêtre de temps en secondes (par exemple, 10 secondes)
-WINDOW_SIZE = 10
+WINDOW_SIZE = 30
 
 # Stockage des statistiques par domaine dans une fenêtre temporelle
 dns_stats = defaultdict(lambda: {"count": 0, "unique_subdomains": set()})
@@ -16,17 +16,22 @@ psl = PublicSuffixList()
 
 def extract_subdomain(domain):
     """
-    Extrait le sous-domaine principal d'un domaine complet.
+    Extrait le sous-domaine principal d'un domaine complet sans utiliser de module externe.
     """
-    # Identifier le domaine de base (ex: "example.com")
-    base_domain = psl.privatesuffix(str(domain))
-    if not base_domain:
-        return None  # Domaine invalide ou introuvable
+    if not domain or not isinstance(domain, str):
+        return None  # Domaine invalide
 
-    # Supprimer le domaine de base pour obtenir le sous-domaine
-    subdomain = domain[: -len(base_domain)].rstrip(".")
+    # Diviser le domaine en parties
+    parts = domain.split(".")
+    if len(parts) < 2:
+        return None  # Pas de domaine valide (par exemple "localhost" ou vide)
+
+    # Identifier le domaine de base (dernier et avant-dernier segments)
+    base_domain = ".".join(parts[-2:])
+
+    # Extraire le sous-domaine
+    subdomain = ".".join(parts[:-2])  # Tout ce qui précède le domaine de base
     return subdomain if subdomain else None
-
 
 
 # Fonction pour nettoyer les fenêtres expirées
@@ -60,6 +65,8 @@ def detect_anomalies(domain, query_type):
     subdomain = extract_subdomain(domain)
     dns_stats[key]["count"] += 1
     dns_stats[key]["unique_subdomains"].add(subdomain)
+
+    print(f"Statistiques pour {domain} dans la fenêtre {key}: {dns_stats[key]}")
 
     # Critères pour lever une alerte dans la fenêtre
     if len(dns_stats[key]["unique_subdomains"]) > 50:  # Beaucoup de sous-domaines uniques

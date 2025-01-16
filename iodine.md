@@ -67,6 +67,7 @@ Sur le client, lancez la commande suivante pour établir le tunnel DNS :
 
 ```bash
 sudo iodine -I 50 -f -P test  tunnel.bonnivard.net
+sudo iodine -I 50 -f -r 159.65.55.92 -P test tunnel.bonnivard.net
 ```
 
 Iodine utilisera `example.com` pour envoyer des requêtes DNS vers le serveur. 
