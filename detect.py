@@ -1,10 +1,10 @@
 from collections import defaultdict
 import time
 
-# Fenêtre de temps en secondes (par exemple, 30 secondes)
+# Fenêtre de temps en secondes
 WINDOW_SIZE = 30
 
-# Stockage des statistiques par domaine dans une fenêtre temporelle
+# Stockage des statistiques par domaine parent
 dns_stats = defaultdict(lambda: {"count": 0, "unique_subdomains": set(), "timestamp": 0})
 
 
@@ -12,14 +12,12 @@ def validate_domain(domain):
     """
     Valide qu'un domaine est bien formé (contient au moins un point).
     """
-    if not domain or not isinstance(domain, str):
-        return False
-    return '.' in domain
+    return domain and '.' in domain
 
 
-def extract_subdomain(domain):
+def extract_parent_domain(domain):
     """
-    Extrait le sous-domaine principal d'un domaine complet sans utiliser de module externe.
+    Extrait le domaine parent (par exemple, tunnel.bonnivard.net) d'un domaine complet.
     """
     if not validate_domain(domain):
         return None
@@ -27,13 +25,20 @@ def extract_subdomain(domain):
     parts = domain.split(".")
     if len(parts) < 2:
         return None
+    return ".".join(parts[-2:])  # Dernier et avant-dernier segments
 
-    # Identifier le domaine de base (dernier et avant-dernier segments)
-    base_domain = ".".join(parts[-2:])
 
-    # Extraire le sous-domaine
-    subdomain = ".".join(parts[:-2])  # Tout ce qui précède le domaine de base
-    return subdomain if subdomain else None
+def extract_subdomain(domain):
+    """
+    Extrait le sous-domaine d'un domaine complet (tout ce qui précède le domaine parent).
+    """
+    if not validate_domain(domain):
+        return None
+
+    parts = domain.split(".")
+    if len(parts) < 3:
+        return None  # Pas de sous-domaine
+    return ".".join(parts[:-2])  # Tout sauf les deux derniers segments
 
 
 def cleanup_expired_windows():
@@ -57,7 +62,7 @@ def get_window_key(domain):
 
 def detect_anomalies(domain, query_type):
     """
-    Détecte les anomalies DNS basées sur les fenêtres temporelles et les statistiques.
+    Détecte les anomalies DNS basées sur les statistiques globales regroupées par domaine parent.
     """
     global dns_stats
 
@@ -71,24 +76,30 @@ def detect_anomalies(domain, query_type):
     # Nettoyage des anciennes fenêtres
     cleanup_expired_windows()
 
+    # Extraire le domaine parent et le sous-domaine
+    parent_domain = extract_parent_domain(domain)
+    subdomain = extract_subdomain(domain)
+
+    if not parent_domain:
+        print(f"[INFO] Impossible d'extraire le domaine parent pour {domain}")
+        return
+
     # Calculer la clé temporelle
-    key = get_window_key(domain)
+    key = get_window_key(parent_domain)
     if key not in dns_stats:
         dns_stats[key] = {"count": 0, "unique_subdomains": set(), "timestamp": time.time()}
 
-    subdomain = extract_subdomain(domain)
+    # Mettre à jour les statistiques
     if subdomain:  # Ne pas ajouter None
         dns_stats[key]["unique_subdomains"].add(subdomain)
     dns_stats[key]["count"] += 1
 
-    print(f"Statistiques pour {domain} dans la fenêtre {key}: {dns_stats[key]}")
-    print("key:", key)
+    # Logs des statistiques actuelles
+    print(f"Statistiques pour {parent_domain} dans la fenêtre {key}: {dns_stats[key]}")
+    print("key", key)
 
-    # Critères pour lever une alerte dans la fenêtre
-    if len(dns_stats[key]["unique_subdomains"]) > 50:  # Beaucoup de sous-domaines uniques
-        print(f"[ALERTE] Tunnel DNS suspect pour {domain}: >50 sous-domaines uniques détectés dans la fenêtre")
-    if any(len(sub) > 63 for sub in dns_stats[key]["unique_subdomains"]):  # Sous-domaine trop long
-        print(f"[ALERTE] Tunnel DNS suspect pour {domain}: sous-domaine trop long détecté")
+    # Critères pour lever une alerte
+    if len(dns_stats[key]["unique_subdomains"]) > 50:  # Nombre élevé de sous-domaines uniques
+        print(f"[ALERTE] Tunnel DNS suspect pour {parent_domain}: >50 sous-domaines uniques détectés dans la fenêtre")
     if dns_stats[key]["count"] > 100 and query_type in ["TXT", "CNAME"]:  # Volume élevé avec type suspect
-        print(f"[ALERTE] Tunnel DNS suspect pour {domain}: >100 requêtes de type {query_type} dans la fenêtre")
-
+        print(f"[ALERTE] Tunnel DNS suspect pour {parent_domain}: >100 requêtes de type {query_type} dans la fenêtre")
